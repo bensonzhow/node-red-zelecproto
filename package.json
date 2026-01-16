@@ -13,7 +13,9 @@
   "keywords": [
     "node-red",
     "node red",
-    "log",
+    "zbatch proto",
+    "698 proto",
+    "645 proto",
     "emit event"
   ],
   "author": "benson.zhows@gmail.com",
@@ -28,7 +30,8 @@
   "node-red": {
     "version": ">=1.3",
     "nodes": {
-      "zlog": "zelecproto.js"
+      "zelecproto": "zelecproto.js",
+      "zbatchproto": "zbatchproto.js"
     }
   },
   "dependencies": {}

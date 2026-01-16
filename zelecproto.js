@@ -1,27 +1,30 @@
 module.exports = function (RED) {
     "use strict";
-    var events = require("events");
-    var _zemitter = new events.EventEmitter();
+    var proto645 = require("./645");
+    var proto698 = require("./698");
 
-    function Zlog(n) {
+    function zelecproto(n) {
         RED.nodes.createNode(this, n);
-        var node = this;
-        if (!RED.settings.functionGlobalContext.zemitter) {
-            RED.settings.functionGlobalContext.zemitter = _zemitter;
-        }
-        _zemitter.on('zlog', function (msg) {
-            node.send(msg);
-        })
+        var node = this;    
 
         this.on("input", function (msg, send, done) {
+            msg._proto = msg.customProto || msg.proto
+            if(msg._proto == "645"){
+                msg = proto645(msg);
+            }else if(msg._proto == "698"){
+                msg = proto698(msg);
+            }
+            delete msg._proto
+            
             send(msg);
+
             done();
         });
         this.on('close', () => {
-            _zemitter.removeAllListeners();
+
         });
 
     }
-    RED.nodes.registerType("zlog", Zlog);
+    RED.nodes.registerType("zelecproto", zelecproto);
 
 }
