@@ -1,4 +1,4 @@
-<script type="text/html" data-template-name="zelecproto">
+<script type="text/html" data-template-name="zeleble">
     <div class="form-row">
         <label for="node-inputoutput-name"><i class="fa fa-tag"></i> <span data-i18n="node-red:common.label.name"></span></label>
         <input type="text" id="node-input-name" data-i18n="[placeholder]node-red:common.label.name">
@@ -6,7 +6,7 @@
 </script>
 
 <script type="text/javascript">
-    RED.nodes.registerType('zelecproto',{
+    RED.nodes.registerType('zeleble',{
         category: 'zutils',
         defaults: {
             name: {name:""}
@@ -14,10 +14,10 @@
         color:"BurlyWood",
         inputs:1,
         outputs:1,
-        icon: "elec.svg",
+        icon: "ble.svg",
         align: "left",
         label: function() {
-            return this.name || "zelecproto";
+            return this.name || "zeleble";
         }
     });
 </script>

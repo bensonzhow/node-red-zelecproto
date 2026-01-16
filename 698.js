@@ -13,6 +13,13 @@
 
 /** ===================== 工具/常量 ===================== */
 
+
+let mlog={
+    debug: function(...args){ console.log("[DEBUG]", ...args); },
+    status: function(...args){ console.log("[STATUS]", ...args); },
+    error: function(...args){ console.error("[ERROR]", ...args); }
+}
+
 // CRC-16/X-25
 function crc16X25(buffer) {
     const CRC_TABLE = Uint16Array.from([
@@ -1258,15 +1265,15 @@ function parsePowerAbnormalCount(dataBuffer) {
         const { result: generic } = enhancedParseData(dataBuffer, '302C', '07');
 
         const nums = [];
-        function collect(node, depth = 0) {
-            if (!node || depth > 8) return;
-            if (typeof node === 'number') { nums.push(node); return; }
-            if (Array.isArray(node)) { for (const it of node) collect(it, depth + 1); return; }
-            if (typeof node === 'object') {
-                if (typeof node.parsedValue === 'number') nums.push(node.parsedValue);
-                collect(node.parsedValue, depth + 1);
-                if (node.value && node.value !== node.parsedValue) collect(node.value, depth + 1);
-                if (node.data && node.data !== node.parsedValue && node.data !== node.value) collect(node.data, depth + 1);
+        function collect(nitem, depth = 0) {
+            if (!nitem || depth > 8) return;
+            if (typeof nitem === 'number') { nums.push(nitem); return; }
+            if (Array.isArray(nitem)) { for (const it of nitem) collect(it, depth + 1); return; }
+            if (typeof nitem === 'object') {
+                if (typeof nitem.parsedValue === 'number') nums.push(nitem.parsedValue);
+                collect(nitem.parsedValue, depth + 1);
+                if (nitem.value && nitem.value !== nitem.parsedValue) collect(nitem.value, depth + 1);
+                if (nitem.data && nitem.data !== nitem.parsedValue && nitem.data !== nitem.value) collect(nitem.data, depth + 1);
             }
         }
         collect(generic);
@@ -2877,7 +2884,8 @@ function batchMsg(_msg, mode) {
                 frameLen: finalFrame.length,
                 time: new Date().toISOString()
             };
-            if (typeof node !== 'undefined' && node) node.status({ fill: 'green', shape: 'dot', text: `编码成功: ${finalFrame.length}B` });
+            // if (typeof node !== 'undefined' && node) node.status({ fill: 'green', shape: 'dot', text: `编码成功: ${finalFrame.length}B` });
+            mlog.status({ fill: 'green', shape: 'dot', text: `编码成功: ${finalFrame.length}B` });
             _msg = Object.assign({}, _pdata, _msg);
             return _msg;
 
@@ -2924,20 +2932,24 @@ function batchMsg(_msg, mode) {
                 : `解码成功: ${result.unifiedFormat.objectInfo?.desc || result.unifiedFormat.type}`;
             const statusFill = (_msg.payload && _msg.payload.error) ? "red" : "green";
 
-            node.status({ fill: statusFill, shape: "dot", text: statusText });
-
+            // node.status({ fill: statusFill, shape: "dot", text: statusText });
+            mlog.status({ fill: statusFill, shape: "dot", text: statusText });
             return _msg;
         }
 
     } catch (err) {
-        node.status({ fill: 'red', shape: 'ring', text: `${mode === 'encode' ? '编码' : '解码'}异常` });
-        node.error(`[DLT698-Codec] ${err.message}`, _msg);
+        // node.status({ fill: 'red', shape: 'ring', text: `${mode === 'encode' ? '编码' : '解码'}异常` });
+        // node.error(`[DLT698-Codec] ${err.message}`, _msg);
+        mlog.status({ fill: 'red', shape: 'ring', text: `${mode === 'encode' ? '编码' : '解码'}异常` });
+        mlog.error(`[DLT698-Codec] ${err.message}`, _msg);
+        
         _msg.error = err.message;
         _msg._mode = mode;
         _msg.payload = null;
         return _msg;
     }
 }
+
 
 
 
@@ -2986,10 +2998,8 @@ function batchMsg698(msg) {
             }
 
         } catch (error) {
-            if (typeof node !== 'undefined' && node) {
-                node.error(error);
-                node.error("msg.payload 传入协议解析只支持String和Array", msg);
-            }
+            throw new Error(`msg.payload 传入协议解析只支持String和Array,${error}`);
+
         }
     }
 }

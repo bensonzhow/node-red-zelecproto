@@ -1,6 +1,6 @@
 {
   "name": "node-red-zelecproto",
-  "version": "0.0.1",
+  "version": "0.0.5",
   "description": "node-red zelecproto node",
   "main": "index.js",
   "scripts": {
@@ -31,7 +31,8 @@
     "version": ">=1.3",
     "nodes": {
       "zelecproto": "zelecproto.js",
-      "zbatchproto": "zbatchproto.js"
+      "zbatchproto": "zbatchproto.js",
+      "zeleble": "zeleble.js"
     }
   },
   "dependencies": {}
