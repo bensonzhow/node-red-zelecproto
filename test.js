@@ -3,10 +3,13 @@ var proto645 = require("./645");
 var proto698 = require("./698");
 
 let msg = {};
-msg.payload = '68 39 00 C3 05 94 18 05 08 37 00 11 97 E1 90 01 20 A0 85 A9 10 C3 33 0D 19 30 D4 EA 61 05 39 C8 41 7F A8 07 63 5C D4 56 A4 D9 C6 F2 2F 98 2A D9 F0 01 00 04 05 78 AC 43 73 01 16 '
+msg.payload = 'FE FE FE FE 68 30 00 C3 05 60 80 63 00 15 19 11 38 1D 90 00 17 85 01 01 30 1B 07 00 01 01 01 02 02 00 02 02 06 00 00 00 00 00 00 00 01 00 04 4C 3E EE F6 B3 CA 16'
+// msg.payload = 'FE FE FE FE 68 30 00 C3 05 77 59 63 00 15 19 11 59 0F 90 00 17 85 01 01 30 1B 07 00 01 01 01 02 02 00 02 02 06 00 00 00 00 00 00 00 01 00 04 B2 F3 8B 23 F2 7C 16'
+// msg.payload = 'FE FE FE FE 68 33 00 C3 05 77 59 63 00 15 19 11 EA F1 90 00 1A 85 01 01 30 13 0A 00 01 01 01 02 02 00 02 02 1C 07 E3 07 17 00 02 2B 00 00 00 01 00 04 30 B1 C0 6E 47 F6 16'
 msg.proto = 698
 msg.mode = 'decode'
 
 
 
+console.log(JSON.stringify(proto698(msg)));
 console.log(proto698(msg));
