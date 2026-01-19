@@ -128,7 +128,9 @@ const OAD_CATEGORIES = {
     },
     EVENT_RECORDS: {
         "POWER_FAILURE_EVENT": { oad: "30110700", desc: "掉电事件记录", type: "octet-string", requestType: "record" },
-        "METER_COVER_EVENT": { oad: "301B0400", desc: "开表盖总次数", type: "long-unsigned", unit: "次", scale: 0 },
+        // 现场报文中常见返回 OAD=301B0700（attr=0x07），部分资料也会用 301B0400
+        "METER_COVER_TOTAL_COUNT_0700": { oad: "301B0700", desc: "开表盖总次数", type: "long-unsigned", unit: "次", scale: 0 },
+        "METER_COVER_TOTAL_COUNT_0400": { oad: "301B0400", desc: "开表盖总次数", type: "long-unsigned", unit: "次", scale: 0 },
         "METER_COVER_EVENT_RECORD": { oad: "301B0701", desc: "开表盖事件记录", type: "octet-string", requestType: "record" },
         "METER_COVER_DETAIL_DATA": { oad: "301B0201", desc: "上一次开盖详细数据", type: "structure", requestType: "normal" },
         "METER_STATUS": { oad: "20140200", desc: "电表运行状态(数组)", type: "bit-string[]" },
@@ -1041,15 +1043,25 @@ function parseMeterStatusOptimized(dataBuffer) {
  * @returns {number|null} 状态字或null
  */
 function parseSecurityResponseStructure(dataBuffer) {
-    if (dataBuffer.length < 3) return null;
+    // SECURITY-Response: 0x90 <security-type> <plain-length> <plain> [<verify-type> <verify-data>]
+    // 你的报文是典型的：90 00 17 <GET-Response...> 01 00 04 <MAC4>
+    if (!dataBuffer || dataBuffer.length < 4) return null;
+    if (dataBuffer[0] !== 0x90) return null;
 
-    const firstByte = dataBuffer[0];
-    if (firstByte !== 0x90) return null; // Security-Response
+    const securityType = dataBuffer[1]; // 0x00 明文
+    if (securityType !== 0x00) {
+        // 目前只支持明文响应；密文/签名场景由上层扩展
+        return null;
+    }
 
-    const plainLength = dataBuffer[1];
-    if (plainLength === 0 || plainLength + 2 > dataBuffer.length) return null;
+    const plainLength = dataBuffer[2];
+    if (plainLength === 0) return null;
+    const plainStart = 3;
+    const plainEnd = plainStart + plainLength;
+    if (plainEnd > dataBuffer.length) return null;
 
-    const plainContent = dataBuffer.slice(2, 2 + plainLength);
+    const plainContent = dataBuffer.slice(plainStart, plainEnd);
+    // 兼容旧逻辑：返回“状态字”场景（parsePlainContent 里会尝试解析 bit-string）
     return parsePlainContent(plainContent);
 }
 
@@ -1059,49 +1071,99 @@ function parseSecurityResponseStructure(dataBuffer) {
  * @returns {number|null} 状态字或null
  */
 function parsePlainContent(plainContent) {
-    if (plainContent.length < 8) return null; // 最小长度检查
+    // 明文段通常就是业务APDU，例如 GET-Response: 85 01 PIID OAD ...
+    // 这里只做“状态字”专用的最小提取：识别 GET-Response-Normal 并尝试从其 A-XDR 中提取 bit-string
+    if (plainContent[0] !== 0x85 || plainContent.length < 8) return null;
+    const choice = plainContent[1];
+    if (choice !== 0x01) return null;
+    const piid = plainContent[2];
+    const oad = plainContent.slice(3, 7).toString('hex').toUpperCase();
+    let offset = 7;
 
-    try {
-        let offset = 0;
-
-        // APDU类型 (2字节)
-        const apduType = plainContent.readUInt16BE(offset);
-        offset += 2;
-
-        // PIID (1字节)
-        const piid = plainContent[offset];
-        offset += 1;
-
-        // OAD (4字节)
-        const oad = plainContent.slice(offset, offset + 4).toString('hex').toUpperCase();
-        offset += 4;
-
-        // 数据类型 (1字节)
-        if (offset >= plainContent.length) return null;
-        const dataType = plainContent[offset];
-        offset += 1;
-
-        // 数据长度 (1字节)
-        if (offset >= plainContent.length) return null;
-        const dataLength = plainContent[offset];
-        offset += 1;
-
-        // 数据内容
-        if (offset + dataLength > plainContent.length) return null;
-        const dataContent = plainContent.slice(offset, offset + dataLength);
-
-        // 尝试解析状态字
-        if (dataType === 0x01 && dataLength >= 4) { // array类型
-            return parseArrayStatusWord(dataContent);
-        } else if (dataType === 0x04 && dataLength >= 4) { // bit-string类型
+    // 数据类型tag（A-XDR）
+    if (offset >= plainContent.length) return null;
+    const dataType = plainContent[offset];
+    // 仅当返回为 bit-string 时提取（状态字常用）
+    if (dataType === 0x04) {
+        // bit-string：tag(0x04) + len(1B) + data
+        if (offset + 2 > plainContent.length) return null;
+        const bitLen = plainContent[offset + 1];
+        const start = offset + 2;
+        const end = start + bitLen;
+        if (end > plainContent.length) return null;
+        const dataContent = plainContent.slice(start, end);
+        if (dataContent.length >= 4) {
             return dataContent.readUInt32LE(0);
         }
+    }
+    return null;
+}
 
-    } catch (error) {
-        console.error('解析明文内容失败:', error.message);
+/**
+ * 从 SECURITY-Response(0x90) 中提取明文段。
+ * 返回：{ plain: Buffer, verify: {type:number, macHex?:string, rawHex?:string} | null, consumed:number }
+ */
+function unwrapSecurityResponse(apduBuf) {
+    if (!apduBuf || apduBuf.length < 4) return null;
+    if (apduBuf[0] !== 0x90) return null;
+
+    const securityType = apduBuf[1];
+    const plainLen = apduBuf[2];
+    const plainStart = 3;
+    const plainEnd = plainStart + plainLen;
+    if (plainEnd > apduBuf.length) return null;
+
+    const plain = apduBuf.slice(plainStart, plainEnd);
+    let verify = null;
+
+    // verify 部分（常见：01 00 04 <MAC4>）
+    let off = plainEnd;
+    if (off + 2 <= apduBuf.length) {
+        const verifyType = apduBuf[off];
+        // verifyType=0x01(验证信息) 或 0x00(无)
+        if (verifyType === 0x01) {
+            // 后面通常是：0x00 0x04 <MAC4>
+            if (off + 4 <= apduBuf.length) {
+                const v1 = apduBuf[off + 1];
+                const vLen = apduBuf[off + 2];
+                const macStart = off + 3;
+                const macEnd = macStart + vLen;
+                if (macEnd <= apduBuf.length) {
+                    verify = {
+                        type: verifyType,
+                        rawHex: apduBuf.slice(off, macEnd).toString('hex').toUpperCase(),
+                        macHex: apduBuf.slice(macStart, macEnd).toString('hex').toUpperCase(),
+                        v1
+                    };
+                    off = macEnd;
+                } else {
+                    verify = { type: verifyType, rawHex: apduBuf.slice(off).toString('hex').toUpperCase() };
+                    off = apduBuf.length;
+                }
+            } else {
+                verify = { type: verifyType, rawHex: apduBuf.slice(off).toString('hex').toUpperCase() };
+                off = apduBuf.length;
+            }
+        }
     }
 
-    return null;
+    return { securityType, plain, verify, consumed: off };
+}
+
+/**
+ * 从 GET-Response(明文) 中提取 OAD 与 A-XDR 数据段。
+ * 仅支持 GetResponseNormal (85 01)。
+ * 返回：{ oadHex, axdrBuf, piid }
+ */
+function extractGetResponseNormal(plainBuf) {
+    if (!plainBuf || plainBuf.length < 8) return null;
+    if (plainBuf[0] !== 0x85) return null; // GET-Response
+    const choice = plainBuf[1];
+    if (choice !== 0x01) return null; // GetResponseNormal
+    const piid = plainBuf[2];
+    const oadHex = plainBuf.slice(3, 7).toString('hex').toUpperCase();
+    const axdrBuf = plainBuf.slice(7); // 从数据类型tag开始（0x01/0x06/0x12/0x1C...）
+    return { oadHex, axdrBuf, piid };
 }
 
 /**
@@ -1295,95 +1357,66 @@ function parsePowerAbnormalCount(dataBuffer) {
  * @returns {Object} 解析结果
  */
 function parseMeterCoverEvent(dataBuffer) {
-    const result = createStandardResult("开表盖总次数", '301B0400', dataBuffer);
+    // 兼容：301B0700 / 301B0400
+    const result = createStandardResult("开表盖总次数", '301B0700', dataBuffer);
 
     try {
-        // 根据实际数据帧分析，开表盖总次数是长无符号整数类型（2字节）
-        const { result: genericResult } = enhancedParseData(dataBuffer, '301B', '04');
+        let axdrBuf = dataBuffer;
+        let oadHex = null;
 
-        if (genericResult.dataType === '长无符号整数') {
-            // 直接使用enhancedParseData已经正确解析的值
-            const coverCount = Number(genericResult.parsedValue);
-            result.value = coverCount;
+        // 若是 SECURITY-Response，则先剥离明文段
+        if (axdrBuf && axdrBuf.length > 0 && axdrBuf[0] === 0x90) {
+            const unwrapped = unwrapSecurityResponse(axdrBuf);
+            if (!unwrapped || !unwrapped.plain) throw new Error('SECURITY-Response 明文段解析失败');
 
-            setSuccessResult(result, [{
-                type: "开表盖总次数",
-                count: coverCount,
-                unit: "次",
-                rawValue: coverCount,
-                description: `电表开盖总次数为 ${coverCount} 次`
-            }], {
-                unit: "次",
-                scale: 0,
-                count: 1,
-                generic: genericResult
-            });
+            const getNormal = extractGetResponseNormal(unwrapped.plain);
+            if (!getNormal) throw new Error('GET-Response-Normal 解析失败');
 
-        } else if (genericResult.dataType === '双长无符号整数') {
-            // 兼容4字节格式（如果某些设备使用）
-            const coverCount = Number(genericResult.parsedValue);
-            result.value = coverCount;
+            oadHex = getNormal.oadHex;
+            axdrBuf = getNormal.axdrBuf;
+            // 更新 metadata 里的 OAD，方便上层展示
+            result.metadata.oad = oadHex;
+        }
 
-            setSuccessResult(result, [{
-                type: "开表盖总次数",
-                count: coverCount,
-                unit: "次",
-                rawValue: coverCount,
-                description: `电表开盖总次数为 ${coverCount} 次`
-            }], {
-                unit: "次",
-                scale: 0,
-                count: 1,
-                generic: genericResult
-            });
+        // 根据实际数据帧分析，开表盖总次数通常是 long-unsigned(0x12) 或 double-long-unsigned(0x06)
+        // 但也可能被 array/structure 包裹（现场报文里就存在这种情况）。
+        const attrHex = (oadHex ? oadHex.slice(4, 6) : '07');
+        const { result: genericResult } = enhancedParseData(axdrBuf, '301B', attrHex);
 
-        } else if (genericResult.dataType === '数组') {
-            // 如果是数组格式，取第一个元素
-            if (genericResult.parsedValue && genericResult.parsedValue.length > 0) {
-                const firstItem = genericResult.parsedValue[0];
-                if (firstItem.dataType === '长无符号整数') {
-                    // 数组中的长无符号整数
-                    const coverCount = Number(firstItem.parsedValue);
-                    result.value = coverCount;
-
-                    setSuccessResult(result, [{
-                        type: "开表盖总次数",
-                        count: coverCount,
-                        unit: "次",
-                        rawValue: coverCount,
-                        description: `电表开盖总次数为 ${coverCount} 次`
-                    }], {
-                        unit: "次",
-                        scale: 0,
-                        count: 1,
-                        generic: genericResult
-                    });
-                } else if (firstItem.dataType === '双长无符号整数') {
-                    // 数组中的双长无符号整数
-                    const coverCount = Number(firstItem.parsedValue);
-                    result.value = coverCount;
-
-                    setSuccessResult(result, [{
-                        type: "开表盖总次数",
-                        count: coverCount,
-                        unit: "次",
-                        rawValue: coverCount,
-                        description: `电表开盖总次数为 ${coverCount} 次`
-                    }], {
-                        unit: "次",
-                        scale: 0,
-                        count: 1,
-                        generic: genericResult
-                    });
-                } else {
-                    throw new Error(`数组中的数据类型不正确: ${firstItem.dataType}`);
+        const pickNumber = (gr) => {
+            if (!gr) return null;
+            if (typeof gr.parsedValue === 'number') return gr.parsedValue;
+            if (gr.dataType === '数组' && Array.isArray(gr.parsedValue) && gr.parsedValue.length) {
+                for (const it of gr.parsedValue) {
+                    if (it && typeof it.parsedValue === 'number') return it.parsedValue;
                 }
-            } else {
-                throw new Error("数组为空，无法解析开盖次数");
             }
-        } else {
+            if (gr.dataType === '结构体' && Array.isArray(gr.parsedValue) && gr.parsedValue.length) {
+                for (const it of gr.parsedValue) {
+                    if (it && typeof it.parsedValue === 'number') return it.parsedValue;
+                }
+            }
+            return null;
+        };
+
+        const coverCount = pickNumber(genericResult);
+        if (coverCount === null) {
             throw new Error(`开表盖总次数数据格式不正确: ${genericResult.dataType}`);
         }
+
+        result.value = coverCount;
+        setSuccessResult(result, [{
+            type: "开表盖总次数",
+            count: coverCount,
+            unit: "次",
+            rawValue: coverCount,
+            description: `电表开盖总次数为 ${coverCount} 次`
+        }], {
+            unit: "次",
+            scale: 0,
+            count: 1,
+            generic: genericResult
+        });
 
     } catch (e) {
         setErrorResult(result, e.message);
