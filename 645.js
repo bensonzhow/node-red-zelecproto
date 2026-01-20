@@ -219,7 +219,7 @@ function reverseHexBytes(hex) {
 }
 
 /******************** 解码：batchMsg（返回统一对象，含 exec_addr/di/value 等） ********************/
-function batchMsg(_msg) {
+function decode645(_msg) {
     // ===== 工具 =====
     function calc645Checksum(u8) {
         let s = 0;
@@ -1014,9 +1014,7 @@ function parseCoverOpenLast645(arrPush) {
 
 
 
-
-
-function batchMsg(msg) {
+function batchMsgMain(msg) {
     /******************** 入口：根据 msg.mode / msg.action 选择 encode / decode ********************/
     const MODE = String(msg.mode || msg.action || 'decode').toLowerCase();
 
@@ -1041,15 +1039,14 @@ function batchMsg(msg) {
     /******************** decode：解码 645 响应（统一返回对象，含 exec_addr 等） ********************/
     const dataIn = msg.payload;
 
-
     if (Array.isArray(dataIn)) {
-        msg.payload = dataIn.map(_msg => batchMsg(_msg));
+        msg.payload = dataIn.map(_msg => decode645(_msg));
     } else {
-        msg.payload = batchMsg(msg);
+        msg.payload = decode645(msg);
     }
     return msg;
 }
 
 
-module.exports = batchMsg;
-module.exports.batchMsg645 = batchMsg;
+module.exports = batchMsgMain;
+module.exports.batchMsg645 = decode645;
