@@ -220,6 +220,16 @@ function reverseHexBytes(hex) {
 
 /******************** 解码：batchMsg（返回统一对象，含 exec_addr/di/value 等） ********************/
 function decode645(_msg) {
+    // 创建一个全新的对象，不依赖于传入的 _msg 对象
+    const result = {};
+    
+    // 复制原始消息的非 payload 属性
+    for (const key in _msg) {
+        if (_msg.hasOwnProperty(key) && key !== 'payload') {
+            result[key] = _msg[key];
+        }
+    }
+    
     // ===== 工具 =====
     function calc645Checksum(u8) {
         let s = 0;
@@ -237,23 +247,23 @@ function decode645(_msg) {
     // ===== 取入参并清洗 =====
     // 允许传 {put:'...'} 或 {payload:'...'}，优先 put
     let put = ((_msg.payload && _msg.payload.put) || _msg.put || _msg.payload || '').toString();
-    if (!put) return { ok: false, reason: 'empty' };
+    if (!put) return Object.assign(result, { ok: false, reason: 'empty' });
 
     // 去前导 FE…FE（最多4个），并去空格
     put = f_stripLeadingFE(put.replace(/\s+/g, '')).toUpperCase();
 
     const buf = hexStringToBuffer(put);
-    if (!buf || buf.length < 12) return { ok: false, reason: 'too_short', raw: put };
+    if (!buf || buf.length < 12) return Object.assign(result, { ok: false, reason: 'too_short', raw: put });
 
     // ===== 基本结构：68 AA(6) 68 CTRL LEN DATA(n) CS 16 =====
     // 容错：定位到第一个 0x68
     let p0 = 0;
     while (p0 < buf.length && buf[p0] !== 0x68) p0++;
-    if (p0 + 12 > buf.length) return { ok: false, reason: 'no_head68', raw: put };
+    if (p0 + 12 > buf.length) return Object.assign(result, { ok: false, reason: 'no_head68', raw: put });
 
     // 第二个 0x68 在地址后
     const p68_2 = p0 + 7;
-    if (buf[p0] !== 0x68 || buf[p68_2] !== 0x68) return { ok: false, reason: 'bad_68_pair', raw: put };
+    if (buf[p0] !== 0x68 || buf[p68_2] !== 0x68) return Object.assign(result, { ok: false, reason: 'bad_68_pair', raw: put });
 
     // 读出地址区（A0..A5）
     const addrBytes = buf.subarray(p0 + 1, p0 + 7);
@@ -268,8 +278,8 @@ function decode645(_msg) {
     const pCS = pDataEnd;
     const pEnd = pDataEnd + 1;
 
-    if (len < 0 || pEnd >= buf.length) return { ok: false, reason: 'len_oob', exec_addr, raw: put };
-    if (buf[pEnd] !== 0x16) return { ok: false, reason: 'no_end16', exec_addr, raw: put };
+    if (len < 0 || pEnd >= buf.length) return Object.assign(result, { ok: false, reason: 'len_oob', exec_addr, raw: put });
+    if (buf[pEnd] !== 0x16) return Object.assign(result, { ok: false, reason: 'no_end16', exec_addr, raw: put });
 
     // —— CS 双模校验：std（第二个68后）与 full（第一个68起）任一通过即可 ——
     const cs_frame = buf[pCS];
@@ -277,7 +287,7 @@ function decode645(_msg) {
     const cs_full = calc645Checksum(buf.subarray(p0, pCS));
     const cs_ok = (cs_std === cs_frame) || (cs_full === cs_frame);
     if (!cs_ok) {
-        return Object.assign(_msg, {
+        return Object.assign(result, {
             success: false, reason: 'cs_fail',
             cs_frame: cs_frame.toString(16).toUpperCase().padStart(2, '0'),
             cs_std: cs_std.toString(16).toUpperCase().padStart(2, '0'),
@@ -289,7 +299,7 @@ function decode645(_msg) {
     const dataRaw = Array.from(buf.subarray(pDataStart, pDataEnd));
     // ===== 控制确认/错误帧 =====
     if (len === 0 && ctrl === 0x9C) {
-        return Object.assign(_msg, {
+        return Object.assign(result, {
             ok: true,
             type: "control_ack",
             exec_addr,
@@ -304,7 +314,7 @@ function decode645(_msg) {
 
     if (ctrl === 0xDC) {
         const detail = minus33(dataRaw);
-        return Object.assign(_msg, {
+        return Object.assign(result, {
             ok: true,
             type: "control_ack_ext",
             exec_addr,
@@ -319,7 +329,7 @@ function decode645(_msg) {
 
     if (ctrl === 0xDA) {
         const detail = minus33(dataRaw);
-        return Object.assign(_msg, {
+        return Object.assign(result, {
             ok: false,
             type: "control_error",
             exec_addr,
@@ -335,7 +345,7 @@ function decode645(_msg) {
 
     if (ctrl === 0xD1) {
         const errRaw = minus33(dataRaw);
-        return Object.assign(_msg, {
+        return Object.assign(result, {
             ok: false,
             type: "control_error",
             exec_addr,
@@ -352,7 +362,7 @@ function decode645(_msg) {
     if (ctrl === 0x93 && len === 0x06) {
         const addrMinus33 = minus33(dataRaw);
         const addr_from_data = bcdAddr12FromLE(Uint8Array.from(addrMinus33));
-        return Object.assign(_msg, {
+        return Object.assign(result, {
             ok: true,
             type: 'address_response',
             exec_addr,                 // 帧头解析出的地址
@@ -370,7 +380,7 @@ function decode645(_msg) {
     let di = '';
     if (arrPush.length >= 4) di = Buffer.from(arrPush.slice(0, 4).reverse()).toString('hex').toUpperCase();
 
-    // 动态判定是否为 “日冻结/结算日冻结” 的 DI（不再限定 30 天，可到 62 等任意 1B 日号）
+    // 动态判定是否为 "日冻结/结算日冻结" 的 DI（不再限定 30 天，可到 62 等任意 1B 日号）
     function isDailyFreezeDI(di) {
         // 645 常见日冻结：050601dd（正向）、050602dd（反向）；dd 为 1B 日号（01~3E/3F/…，扩展都能兜住）
         return /^05060[12][0-9A-F]{2}$/i.test(di || '');
@@ -382,7 +392,7 @@ function decode645(_msg) {
 
 
     //判定为组合电量
-    function isToatalDI(di) {
+    function isTootalDI(di) {
         let arr = ['0000FF00', '0001FF00', '0002FF00']
         return arr.includes(di)
     }
@@ -402,7 +412,7 @@ function decode645(_msg) {
 
     let value = '';
     try {
-        // // —— 读数据“请求帧”：CTRL=0x11 且 LEN=0x04，仅含 DI，无数值 ——
+        // // —— 读数据"请求帧"：CTRL=0x11 且 LEN=0x04，仅含 DI，无数值 ——
         // if (ctrl === 0x11 && len === 0x04 && arrPush.length === 4) {
         //     return Object.assign(_msg, {
         //         ok: true,
@@ -672,18 +682,18 @@ function decode645(_msg) {
         } else if (di === '03300D00' && arrPush.length >= 4) {
             value = bytesToIntBE(arrPush.slice(4).reverse());
         }
-        else if ((isDailyFreezeDI(di) || isSettlementFreezeDI(di) || isToatalDI(di)) && arrPush.length >= 8) {
+        else if ((isDailyFreezeDI(di) || isSettlementFreezeDI(di) || isTootalDI(di)) && arrPush.length >= 8) {
             // else if ((arrDays.includes(di) || arrDaysFX.includes(di) || arrDaysZX.includes(di) || arrDaysJSR.includes(di)) && arrPush.length >= 8) {
             // const energyNum = bytesToIntBE(arrPush.slice(4, 8).reverse());
             // value = Math.round(energyNum / 100 * 100) / 100;
             // DATA-0x33 后：DI(4) + 5×(4B 小端 BCD) = 24B LEN → 与 698 的日冻结 record 风格一致
-            // DATA-0x33 后:  DI(4) + N×(4B 小端BCD)；常见为 5 组（总/尖/峰/平/谷），也有只回 1 组“总”的情况
+            // DATA-0x33 后:  DI(4) + N×(4B 小端BCD)；常见为 5 组（总/尖/峰/平/谷），也有只回 1 组"总"的情况
             const afterDI = arrPush.slice(4);
             const labels = ['总', '尖', '峰', '平', '谷'];
 
 
             // 0000FF00 / 0001FF00 / 0002FF00：乱码模式
-            const isTotalBlock = isToatalDI(di);
+            const isTotalBlock = isTootalDI(di);
 
             // 4B 小端 BCD → 十进制（2 小数位，单位 kWh）
             function parseEnergyLE4(b4) {
@@ -722,11 +732,11 @@ function decode645(_msg) {
             // 如设备回了超过 5 组（极少见）或多余字节，挂个 extra 方便排查，不影响主结果
             const extraStart = parseCount * 4;
             if (afterDI.length > extraStart) {
-                _msg.extraRaw = bytesToHex(afterDI.slice(extraStart)).replace(/\s+/g, '');
+                result.extraRaw = bytesToHex(afterDI.slice(extraStart)).replace(/\s+/g, '');
             }
 
             value = items.map(it => it.value);          // 与你 698 解析保持一致：value 返回纯数值数组
-            _msg.payload = { data: items, value };             // 附带明细（含 rawBCD）
+            result.payload = { data: items, value };             // 附带明细（含 rawBCD）
         } else if (di === '04000402' && arrPush.length >= 8) {
             value = Buffer.from(arrPush.slice(4).reverse()).toString('hex').toUpperCase();
         } else if (arrPub.includes(di) && arrPush.length >= 8) {
@@ -792,10 +802,10 @@ function decode645(_msg) {
             };
         }
     } catch (e) {
-        return Object.assign(_msg, { ok: false, reason: 'decode_exception', exec_addr, di, ctrl, len, raw: put, err: String(e) });
+        return Object.assign(result, { ok: false, reason: 'decode_exception', exec_addr, di, ctrl, len, raw: put, err: String(e) });
     }
 
-    return Object.assign(_msg, {
+    return Object.assign(result, {
         ok: true,
         type: 'data_response',
         exec_addr,
@@ -1042,11 +1052,13 @@ function batchMsgMain(msg) {
     if (Array.isArray(dataIn)) {
         msg.payload = dataIn.map(_msg => decode645(_msg));
     } else {
-        msg.payload = decode645(msg);
+        const decodedResult = decode645(msg);
+        msg.payload = decodedResult;
+
     }
     return msg;
 }
 
 
 module.exports = batchMsgMain;
-module.exports.batchMsg645 = decode645;
+module.exports.batchMsg645 = batchMsgMain;
