@@ -28,6 +28,10 @@ function build645Frame(i, reverseAddr, csMode) {
         return buildEncrypted645Frame(i, addrBytes, reverseAddr, csMode);
     }
 
+    if (oad === '04040300') {
+        return buildSwitchScreen645Frame(i, addrBytes, csMode);
+    }
+
 
     // OAD 加密：倒序 + 每字节 +0x33
     const cmdEx = encryptOAD(oad); // "xx xx xx xx"
@@ -47,6 +51,38 @@ function build645Frame(i, reverseAddr, csMode) {
         com_exec_addr: bytesToHex(addrBytes).replace(/\s+/g, ''), // 按当前编码顺序（倒序与否）给出
         cmdEx,                       // 加密后的 OAD（调试用）
         payload: fullHex             // 最终 645 帧（HEX 串，无空格）
+    });
+}
+
+function buildSwitchScreen645Frame(i, addrBytes, csMode) {
+    const payload = i.payload || {};
+    const screenRaw = payload.screenContent || payload.switchScreenContent || payload.switchScreen || payload.itemContent || payload.dataHex;
+    let screenHex = String(screenRaw || '').replace(/\s+/g, '').toUpperCase();
+    if (!screenHex) throw new Error('04040300 屏显切换需要提供 screenContent/itemContent');
+    if (screenHex.length === 8) screenHex += '00';
+    if (!/^[0-9A-F]{10}$/.test(screenHex)) throw new Error('04040300 切屏内容必须是 10 位 HEX，例如 0001000000');
+
+    const screenBody = screenHex.slice(0, 8);
+    const optionByte = screenHex.slice(8, 10);
+    const oadBytes = hexToBytes(encryptOAD('04040300').replace(/\s+/g, ''));
+    const dataBytes = [
+        ...oadBytes,
+        ...hexToBytes(reverseHexBytes(screenBody)).map(b => (b + 0x33) & 0xFF),
+        ...hexToBytes(optionByte).map(b => (b + 0x33) & 0xFF)
+    ];
+
+    const C = 0x11;
+    const L = dataBytes.length;
+    const frameNoCS = [0x68, ...addrBytes, 0x68, C, L, ...dataBytes];
+    const cs = calc645CSForBytes(frameNoCS, csMode);
+    const csHex = cs.toString(16).toUpperCase().padStart(2, '0');
+    const fullHex = (`FE FE FE FE ${bytesToHex(frameNoCS)} ${csHex} 16`).replace(/\s+/g, '');
+    let _payload = i.payload || {};
+    return Object.assign(i, _payload, {
+        com_exec_addr: bytesToHex(addrBytes).replace(/\s+/g, ''),
+        cmdEx: bytesToHex(oadBytes).replace(/\s+/g, ''),
+        switchScreenContent: screenHex,
+        payload: fullHex
     });
 }
 
@@ -671,6 +707,20 @@ function decode645(_msg) {
                     '密钥更新密钥有效': !!(v & (1 << 3)), '传输密钥有效': !!(v & (1 << 4)), '保护密钥有效': !!(v & (1 << 5)),
                     '广播认证密钥有效': !!(v & (1 << 6)), '主控密钥不可恢复': !!(v & (1 << 7))
                 }
+            };
+        } else if (di === '04040300' && arrPush.length >= 5) {
+            const body = arrPush.slice(4);
+            const option = body.length > 0 ? body[body.length - 1] : null;
+            const screenContent = body.length > 1
+                ? Buffer.from(body.slice(0, -1).reverse()).toString('hex').toUpperCase()
+                : '';
+            value = {
+                type: 'switch_screen',
+                description: '屏显切换',
+                screenContent,
+                option: option == null ? null : option.toString(16).toUpperCase().padStart(2, '0'),
+                itemContent: screenContent + (option == null ? '' : option.toString(16).toUpperCase().padStart(2, '0')),
+                rawMinus33: bytesToHex(arrPush).replace(/\s+/g, '')
             };
         } else if (di === '04000102' && arrPush.length >= 3) {
             value = Buffer.from(arrPush.slice(-3).reverse()).toString('hex').toUpperCase(); // "HHMMSS"
