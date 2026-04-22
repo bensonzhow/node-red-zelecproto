@@ -859,6 +859,32 @@ function toBigEndian16(value) {
     // 将小端(低字节在前)转换为大端(高字节在前)
     return (lower << 8) | upper;
 }
+
+function parseStatusWordFromAxdrBitString(buffer) {
+    if (!Buffer.isBuffer(buffer) || buffer.length < 3 || buffer[0] !== 0x04) return null;
+    const L = readAxdrLength(buffer, 1);
+    const byteLen = Math.ceil(L.len / 8);
+    const start = 1 + L.size;
+    const end = start + byteLen;
+    if (end > buffer.length) return null;
+    const bytes = buffer.slice(start, end);
+    if (bytes.length < 2) return null;
+    const bits = [];
+    for (const byte of bytes.slice(0, 2)) {
+        for (let bit = 7; bit >= 0; bit--) {
+            bits.push((byte >> bit) & 0x01);
+        }
+    }
+    let statusWord = 0;
+    for (let i = 0; i < 16; i++) {
+        statusWord |= bits[i] << i;
+    }
+    return {
+        statusWord,
+        binary: bits.slice(0, 16).join('')
+    };
+}
+
 /**
  * 解析电表运行状态字2 - 与645协议格式保持一致
  * @param {Buffer} dataBuffer - 数据缓冲区
@@ -928,11 +954,12 @@ function parseMeterStatusWord3(dataBuffer) {
     const oad = '20140203';
     const result = createStandardResult("电表运行状态字3", oad, dataBuffer);
     try {
-        const statusWord = parseMeterStatusOptimized(dataBuffer);
+        const bitStringStatus = parseStatusWordFromAxdrBitString(dataBuffer);
+        const statusWord = bitStringStatus?.statusWord ?? parseMeterStatusOptimized(dataBuffer);
         if (statusWord === null) throw new Error('无法解析状态字');
 
         const val16 = statusWord & 0xFFFF; // 低16位
-        const bin = val16.toString(2).padStart(16, '0');
+        const bin = bitStringStatus?.binary ?? val16.toString(2).padStart(16, '0');
 
         const supplyBits = (val16 >> 1) & 0b11; // bit2-bit1
         const supplyMode = (
@@ -984,11 +1011,12 @@ function parseMeterStatusWord2(dataBuffer) {
     const oad = '20140202';
     const result = createStandardResult("电表运行状态字2", oad, dataBuffer);
     try {
-        const statusWord = parseMeterStatusOptimized(dataBuffer);
+        const bitStringStatus = parseStatusWordFromAxdrBitString(dataBuffer);
+        const statusWord = bitStringStatus?.statusWord ?? parseMeterStatusOptimized(dataBuffer);
         if (statusWord === null) throw new Error('无法解析状态字');
 
         const val16 = statusWord & 0xFFFF;
-        const bin = val16.toString(2).padStart(16, '0');
+        const bin = bitStringStatus?.binary ?? val16.toString(2).padStart(16, '0');
 
         const bit = (n) => ((val16 >> n) & 0x1);
         const dir = (b) => (b ? '反向' : '正向'); // 0=正向, 1=反向
