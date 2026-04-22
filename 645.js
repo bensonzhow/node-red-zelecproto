@@ -534,52 +534,17 @@ function decode645(_msg) {
                 }
             };
 
-            // —— 状态字2（与你现有的 04000502 保持一致）——
+            // 状态字2/3只保留原始数值和binary，具体位义由上层业务或文档表解释。
             const w2 = readU16LE();
-            const dir = (b) => (b ? '反向' : '正向');
             const word2 = (w2 === null) ? null : {
                 rawValue: w2,
-                binary: bin16(w2),
-                fields: {
-                    'A相有功功率方向': dir(bit(w2, 0)),
-                    'B相有功功率方向': dir(bit(w2, 1)),
-                    'C相有功功率方向': dir(bit(w2, 2)),
-                    'A相无功功率方向': dir(bit(w2, 4)),
-                    'B相无功功率方向': dir(bit(w2, 5)),
-                    'C相无功功率方向': dir(bit(w2, 6))
-                }
+                binary: bin16(w2)
             };
 
-            // —— 状态字3（与你现有的 04000503 保持一致）——
             const w3 = readU16LE();
-            const supplyBits = (w3 === null) ? 0 : ((w3 >> 1) & 0b11);
-            const supplyMode = (
-                supplyBits === 0 ? '主电源' :
-                    supplyBits === 1 ? '辅助电源' :
-                        supplyBits === 2 ? '电池供电' : '保留'
-            );
-            const meterTypeBits = (w3 === null) ? 0 : ((w3 >> 8) & 0b11);
-            const meterType = (
-                meterTypeBits === 0 ? '非预付费表' :
-                    meterTypeBits === 1 ? '电量型预付费表' :
-                        meterTypeBits === 2 ? '电费型预付费表' : '保留'
-            );
             const word3 = (w3 === null) ? null : {
                 rawValue: w3,
-                binary: bin16(w3),
-                fields: {
-                    当前运行时段套数: (bit(w3, 0) ? '第二套' : '第一套'),
-                    供电方式: supplyMode,
-                    编程允许状态: (bit(w3, 3) ? '有效' : '失效'),
-                    继电器状态: (bit(w3, 4) ? '断' : '通'),
-                    当前运行时区套数: (bit(w3, 5) ? '第二套' : '第一套'),
-                    继电器命令状态: (bit(w3, 6) ? '断' : '通'),
-                    预跳闸报警状态: (bit(w3, 7) ? '有' : '无'),
-                    电能表类型: meterType,
-                    当前运行分时费率套数: (bit(w3, 10) ? '第二套' : '第一套'),
-                    当前阶梯套数: (bit(w3, 11) ? '第二套' : '第一套'),
-                    保电状态: (bit(w3, 12) ? '保电' : '非保电')
-                }
+                binary: bin16(w3)
             };
 
             // —— 密钥状态字（与你现有的 04000508 保持一致，32位）——
@@ -630,64 +595,26 @@ function decode645(_msg) {
                 }
             };
         } else if (di === '04000502' && arrPush.length >= 6) {
-            // 运行状态字2（方向类）：A/B/C 相有功与无功功率方向（0=正向，1=反向）
+            // 状态字2只返回原始数值，binary为bit15..bit0。
             const lo = arrPush[4] & 0xFF;
             const hi = arrPush[5] & 0xFF;
             const v = (hi << 8) | lo;
             const bin = v.toString(2).padStart(16, '0');
 
-            const bit = (n) => ((v >> n) & 0x1);
-            const dir = (b) => (b ? '反向' : '正向');
-
             value = {
                 rawValue: v,
-                binary: bin,
-                fields: {
-                    'A相有功功率方向': dir(bit(0)),
-                    'B相有功功率方向': dir(bit(1)),
-                    'C相有功功率方向': dir(bit(2)),
-                    'A相无功功率方向': dir(bit(4)),
-                    'B相无功功率方向': dir(bit(5)),
-                    'C相无功功率方向': dir(bit(6))
-                }
+                binary: bin
             };
         } else if (di === '04000503' && arrPush.length >= 6) {
-            // 运行状态字3（操作类）
+            // 状态字3只返回原始数值，binary为bit15..bit0。
             const lo = arrPush[4] & 0xFF;
             const hi = arrPush[5] & 0xFF;
             const v = (hi << 8) | lo;
             const bin = v.toString(2).padStart(16, '0');
 
-            const supplyBits = (v >> 1) & 0b11; // bit2-bit1
-            const supplyMode = (
-                supplyBits === 0 ? '主电源' :
-                    supplyBits === 1 ? '辅助电源' :
-                        supplyBits === 2 ? '电池供电' : '保留'
-            );
-
-            const meterTypeBits = (v >> 8) & 0b11; // bit9-bit8
-            const meterType = (
-                meterTypeBits === 0 ? '非预付费表' :
-                    meterTypeBits === 1 ? '电量型预付费表' :
-                        meterTypeBits === 2 ? '电费型预付费表' : '保留'
-            );
-
             value = {
                 rawValue: v,
-                binary: bin,
-                fields: {
-                    当前运行时段套数: (v & 0x1) ? '第二套' : '第一套',               // bit0
-                    供电方式: supplyMode,                                          // bit2-bit1
-                    编程允许状态: (v & (1 << 3)) ? '有效' : '失效',                   // bit3
-                    继电器状态: (v & (1 << 4)) ? '断' : '通',                        // bit4（线路实际工作状态）
-                    当前运行时区套数: (v & (1 << 5)) ? '第二套' : '第一套',           // bit5
-                    继电器命令状态: (v & (1 << 6)) ? '断' : '通',                    // bit6（远程拉闸命令）
-                    预跳闸报警状态: (v & (1 << 7)) ? '有' : '无',                    // bit7
-                    电能表类型: meterType,                                          // bit9-bit8
-                    当前运行分时费率套数: (v & (1 << 10)) ? '第二套' : '第一套',      // bit10
-                    当前阶梯套数: (v & (1 << 11)) ? '第二套' : '第一套',              // bit11
-                    保电状态: (v & (1 << 12)) ? '保电' : '非保电'                    // bit12
-                }
+                binary: bin
             };
         }
         // else if (['0000FF00', '0001FF00', '0002FF00'].includes(di) && arrPush.length > 4) {

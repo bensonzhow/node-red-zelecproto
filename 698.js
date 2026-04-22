@@ -870,18 +870,25 @@ function parseStatusWordFromAxdrBitString(buffer) {
     const bytes = buffer.slice(start, end);
     if (bytes.length < 2) return null;
     const bits = [];
+    const lowToHighBits = [];
+    // A-XDR bit-string按每字节高位到低位展开；另保留低位到高位展示用于和现场口径对照。
     for (const byte of bytes.slice(0, 2)) {
         for (let bit = 7; bit >= 0; bit--) {
             bits.push((byte >> bit) & 0x01);
         }
+        for (let bit = 0; bit <= 7; bit++) {
+            lowToHighBits.push((byte >> bit) & 0x01);
+        }
     }
     let statusWord = 0;
+    // 文档表F.x中的bit编号按展开后的bit-string下标映射，后续binary再按645一致的数值形式输出。
     for (let i = 0; i < 16; i++) {
         statusWord |= bits[i] << i;
     }
     return {
         statusWord,
-        binary: bits.slice(0, 16).join('')
+        binaryLowToHigh: lowToHighBits.slice(0, 16).join(''),
+        binaryHighToLow: bits.slice(0, 16).join('')
     };
 }
 
@@ -959,38 +966,14 @@ function parseMeterStatusWord3(dataBuffer) {
         if (statusWord === null) throw new Error('无法解析状态字');
 
         const val16 = statusWord & 0xFFFF; // 低16位
-        const bin = bitStringStatus?.binary ?? val16.toString(2).padStart(16, '0');
-
-        const supplyBits = (val16 >> 1) & 0b11; // bit2-bit1
-        const supplyMode = (
-            supplyBits === 0 ? '主电源' :
-                supplyBits === 1 ? '辅助电源' :
-                    supplyBits === 2 ? '电池供电' : '保留'
-        );
-
-        const meterTypeBits = (val16 >> 8) & 0b11; // bit9-bit8
-        const meterType = (
-            meterTypeBits === 0 ? '非预付费表' :
-                meterTypeBits === 1 ? '电量型预付费表' :
-                    meterTypeBits === 2 ? '电费型预付费表' : '保留'
-        );
+        // binary按最终状态字数值输出(bit15..bit0)，与645状态字binary保持一致。
+        const bin = val16.toString(2).padStart(16, '0');
 
         result.value = {
             rawValue: val16,
             binary: bin,
-            fields: {
-                当前运行时段套数: (val16 & 0x1) ? '第二套' : '第一套',
-                供电方式: supplyMode,                              // bit2-bit1
-                编程允许状态: (val16 & (1 << 3)) ? '有效' : '失效',   // bit3
-                继电器状态: (val16 & (1 << 4)) ? '断' : '通',        // bit4（线路实际工作状态）
-                当前运行时区套数: (val16 & (1 << 5)) ? '第二套' : '第一套',
-                继电器命令状态: (val16 & (1 << 6)) ? '断' : '通',    // bit6（远程拉闸命令）
-                预跳闸报警状态: (val16 & (1 << 7)) ? '有' : '无',    // bit7
-                电能表类型: meterType,                              // bit9-bit8
-                当前运行分时费率套数: (val16 & (1 << 10)) ? '第二套' : '第一套',
-                当前阶梯套数: (val16 & (1 << 11)) ? '第二套' : '第一套',
-                保电状态: (val16 & (1 << 12)) ? '保电' : '非保电'
-            }
+            ...(bitStringStatus?.binaryLowToHigh ? { binaryLowToHigh: bitStringStatus.binaryLowToHigh } : {}),
+            ...(bitStringStatus?.binaryHighToLow ? { binaryHighToLow: bitStringStatus.binaryHighToLow } : {})
         };
 
         setSuccessResult(result, {
@@ -1016,27 +999,15 @@ function parseMeterStatusWord2(dataBuffer) {
         if (statusWord === null) throw new Error('无法解析状态字');
 
         const val16 = statusWord & 0xFFFF;
-        const bin = bitStringStatus?.binary ?? val16.toString(2).padStart(16, '0');
-
-        const bit = (n) => ((val16 >> n) & 0x1);
-        const dir = (b) => (b ? '反向' : '正向'); // 0=正向, 1=反向
-
-        // 按表F.2位义生成具名字段
-        const fields = {
-            'A相有功功率方向': dir(bit(0)), // bit0
-            'B相有功功率方向': dir(bit(1)), // bit1
-            'C相有功功率方向': dir(bit(2)), // bit2
-            'A相无功功率方向': dir(bit(4)), // bit4
-            'B相无功功率方向': dir(bit(5)), // bit5
-            'C相无功功率方向': dir(bit(6))  // bit6
-            // 其余bit3、bit7、bit8~bit15为保留
-        };
+        // binary按最终状态字数值输出(bit15..bit0)，与645状态字binary保持一致。
+        const bin = val16.toString(2).padStart(16, '0');
 
         result.value = {
             rawValue: val16,
             binary: bin,
-            bits: decodeMeterStatusBits(val16),
-            fields
+            ...(bitStringStatus?.binaryLowToHigh ? { binaryLowToHigh: bitStringStatus.binaryLowToHigh } : {}),
+            ...(bitStringStatus?.binaryHighToLow ? { binaryHighToLow: bitStringStatus.binaryHighToLow } : {}),
+            bits: decodeMeterStatusBits(val16)
         };
 
         setSuccessResult(result, { statusWord: val16, statusWordHex: val16.toString(16).padStart(4, '0').toUpperCase(), statusBits: decodeMeterStatusBits(val16) }, { generic: { dataType: 'bit-string' } });
