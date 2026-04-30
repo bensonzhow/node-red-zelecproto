@@ -870,14 +870,10 @@ function parseStatusWordFromAxdrBitString(buffer) {
     const bytes = buffer.slice(start, end);
     if (bytes.length < 2) return null;
     const bits = [];
-    const lowToHighBits = [];
-    // A-XDR bit-string按每字节高位到低位展开；另保留低位到高位展示用于和现场口径对照。
+    // A-XDR bit-string按每字节高位到低位展开。
     for (const byte of bytes.slice(0, 2)) {
         for (let bit = 7; bit >= 0; bit--) {
             bits.push((byte >> bit) & 0x01);
-        }
-        for (let bit = 0; bit <= 7; bit++) {
-            lowToHighBits.push((byte >> bit) & 0x01);
         }
     }
     let statusWord = 0;
@@ -887,8 +883,7 @@ function parseStatusWordFromAxdrBitString(buffer) {
     }
     return {
         statusWord,
-        binaryLowToHigh: lowToHighBits.slice(0, 16).join(''),
-        binaryHighToLow: bits.slice(0, 16).join(''),
+        binary: bits.slice(0, 16).join(''),
         consumed: end
     };
 }
@@ -907,10 +902,8 @@ function format698StatusWord(statusWord, bitStringStatus = null, index = null) {
         ...(index == null ? {} : { index }),
         rawValue: val16,
         statusWordHex: val16.toString(16).padStart(4, '0').toUpperCase(),
-        // binary按最终状态字数值输出(bit15..bit0)，与645状态字binary保持一致。
-        binary: val16.toString(2).padStart(16, '0'),
-        ...(bitStringStatus?.binaryLowToHigh ? { binaryLowToHigh: bitStringStatus.binaryLowToHigh } : {}),
-        ...(bitStringStatus?.binaryHighToLow ? { binaryHighToLow: bitStringStatus.binaryHighToLow } : {}),
+        // binary按原始bit-string显示，便于与645页面展示口径保持一致。
+        binary: bitStringStatus?.binary || val16.toString(2).padStart(16, '0'),
         bits: expandBits16(val16)
     };
 }
