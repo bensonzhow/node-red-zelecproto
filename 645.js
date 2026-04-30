@@ -433,6 +433,20 @@ function decode645(_msg) {
         return arr.includes(di)
     }
 
+    function expandBits16(v) {
+        const bits = {};
+        for (let i = 0; i < 16; i++) {
+            bits[`bit${i}`] = (v >> i) & 0x1;
+        }
+        return bits;
+    }
+    function expandBits32(v) {
+        const bits = {};
+        for (let i = 0; i < 32; i++) {
+            bits[`bit${i}`] = (v >>> i) & 0x1;
+        }
+        return bits;
+    }
 
     // —— 常用分支（保留你的原分支，增加越界保护）——
     function buildDays(prefix) {
@@ -520,31 +534,22 @@ function decode645(_msg) {
                 rawValue: w1,
                 rawBlockHex: statusBlockHex,
                 binary: bin16(w1),
-                keys: {
-                    '停电抄表电池欠压': !!bit(w1, 3),
-                    '时钟电池欠压': !!bit(w1, 2),
-                    '有功功率方向反向': !!bit(w1, 4),
-                    '无功功率方向反向': !!bit(w1, 5),
-                    '控制回路错误': !!bit(w1, 8),
-                    'ESAM错误': !!bit(w1, 9),
-                    '内部程序错误': !!bit(w1, 12),
-                    '存储器故障或损坏': !!bit(w1, 13),
-                    '透支状态': !!bit(w1, 14),
-                    '时钟故障': !!bit(w1, 15)
-                }
+                bits: expandBits16(w1)
             };
 
             // 状态字2/3只保留原始数值和binary，具体位义由上层业务或文档表解释。
             const w2 = readU16LE();
             const word2 = (w2 === null) ? null : {
                 rawValue: w2,
-                binary: bin16(w2)
+                binary: bin16(w2),
+                bits: expandBits16(w2)
             };
 
             const w3 = readU16LE();
             const word3 = (w3 === null) ? null : {
                 rawValue: w3,
-                binary: bin16(w3)
+                binary: bin16(w3),
+                bits: expandBits16(w3)
             };
 
             // —— 密钥状态字（与你现有的 04000508 保持一致，32位）——
@@ -553,6 +558,7 @@ function decode645(_msg) {
                 rawValue: w8,
                 hexValue: w8.toString(16).toUpperCase().padStart(8, '0'),
                 binary: bin32(w8),
+                bits: expandBits32(w8),
                 keys: {
                     '主控密钥有效': !!bit(w8, 0),
                     '身份认证密钥有效': !!bit(w8, 1),
@@ -581,18 +587,7 @@ function decode645(_msg) {
 
             value = {
                 rawValue: v, binary: bin,
-                keys: {
-                    '停电抄表电池欠压': !!(v & (1 << 3)),    // bit3: 0=正常, 1=欠压
-                    '时钟电池欠压': !!(v & (1 << 2)),        // bit2: 0=正常, 1=欠压
-                    '有功功率方向反向': !!(v & (1 << 4)),    // bit4: 0=正向, 1=反向
-                    '无功功率方向反向': !!(v & (1 << 5)),    // bit5: 0=正向, 1=反向
-                    '控制回路错误': !!(v & (1 << 8)),        // bit8: 0=正常, 1=错误
-                    'ESAM错误': !!(v & (1 << 9)),           // bit9: 0=正常, 1=错误
-                    '内部程序错误': !!(v & (1 << 12)),       // bit12: 0=正常, 1=错误
-                    '存储器故障或损坏': !!(v & (1 << 13)),   // bit13: 0=正常, 1=故障
-                    '透支状态': !!(v & (1 << 14)),          // bit14: 0=正常, 1=透支
-                    '时钟故障': !!(v & (1 << 15))           // bit15: 0=正常, 1=故障
-                }
+                bits: expandBits16(v)
             };
         } else if (di === '04000502' && arrPush.length >= 6) {
             // 状态字2只返回原始数值，binary为bit15..bit0。
@@ -603,7 +598,8 @@ function decode645(_msg) {
 
             value = {
                 rawValue: v,
-                binary: bin
+                binary: bin,
+                bits: expandBits16(v)
             };
         } else if (di === '04000503' && arrPush.length >= 6) {
             // 状态字3只返回原始数值，binary为bit15..bit0。
@@ -614,7 +610,8 @@ function decode645(_msg) {
 
             value = {
                 rawValue: v,
-                binary: bin
+                binary: bin,
+                bits: expandBits16(v)
             };
         }
         // else if (['0000FF00', '0001FF00', '0002FF00'].includes(di) && arrPush.length > 4) {
@@ -629,6 +626,7 @@ function decode645(_msg) {
                 rawValue: v,
                 hexValue: v.toString(16).toUpperCase().padStart(8, '0'),
                 binary: v.toString(2).padStart(32, '0'),
+                bits: expandBits32(v),
                 keys: {
                     '主控密钥有效': !!(v & (1 << 0)), '身份认证密钥有效': !!(v & (1 << 1)), '密钥协商密钥有效': !!(v & (1 << 2)),
                     '密钥更新密钥有效': !!(v & (1 << 3)), '传输密钥有效': !!(v & (1 << 4)), '保护密钥有效': !!(v & (1 << 5)),

@@ -888,133 +888,129 @@ function parseStatusWordFromAxdrBitString(buffer) {
     return {
         statusWord,
         binaryLowToHigh: lowToHighBits.slice(0, 16).join(''),
-        binaryHighToLow: bits.slice(0, 16).join('')
+        binaryHighToLow: bits.slice(0, 16).join(''),
+        consumed: end
     };
 }
 
+function expandBits16(v) {
+    const bits = {};
+    for (let i = 0; i < 16; i++) {
+        bits[`bit${i}`] = (v >> i) & 0x1;
+    }
+    return bits;
+}
+
+function format698StatusWord(statusWord, bitStringStatus = null, index = null) {
+    const val16 = statusWord & 0xFFFF;
+    return {
+        ...(index == null ? {} : { index }),
+        rawValue: val16,
+        statusWordHex: val16.toString(16).padStart(4, '0').toUpperCase(),
+        // binary按最终状态字数值输出(bit15..bit0)，与645状态字binary保持一致。
+        binary: val16.toString(2).padStart(16, '0'),
+        ...(bitStringStatus?.binaryLowToHigh ? { binaryLowToHigh: bitStringStatus.binaryLowToHigh } : {}),
+        ...(bitStringStatus?.binaryHighToLow ? { binaryHighToLow: bitStringStatus.binaryHighToLow } : {}),
+        bits: expandBits16(val16)
+    };
+}
+
+function parseStatusWordsFromAxdrArray(buffer) {
+    if (!Buffer.isBuffer(buffer) || buffer.length < 2 || buffer[0] !== 0x01) return [];
+    const L = readAxdrLength(buffer, 1);
+    const count = L.len;
+    let offset = 1 + L.size;
+    const words = [];
+
+    for (let i = 0; i < count && offset < buffer.length; i++) {
+        if (buffer[offset] === 0x04) {
+            const word = parseStatusWordFromAxdrBitString(buffer.slice(offset));
+            if (!word) break;
+            words.push(word);
+            offset += word.consumed;
+        } else {
+            const { consumed } = enhancedParseData(buffer.slice(offset), '2014', '02');
+            if (!consumed) break;
+            offset += consumed;
+        }
+    }
+
+    return words;
+}
+
+function parseMeterStatusWord698(dataBuffer, oad, dataType) {
+    const result = createStandardResult(dataType, oad, dataBuffer);
+    try {
+        const bitStringStatus = parseStatusWordFromAxdrBitString(dataBuffer);
+        const statusWord = bitStringStatus?.statusWord ?? parseMeterStatusOptimized(dataBuffer);
+        if (statusWord === null) throw new Error('无法解析状态字');
+
+        const value = format698StatusWord(statusWord, bitStringStatus);
+        result.value = value;
+
+        setSuccessResult(result, {
+            statusWord: value.rawValue,
+            statusWordHex: value.statusWordHex,
+            statusBits: decodeMeterStatusBits(value.rawValue)
+        }, { generic: { dataType: 'bit-string' } });
+    } catch (e) {
+        setErrorResult(result, e.message);
+    }
+
+    return result;
+}
+
+function parseMeterStatusArray698(dataBuffer) {
+    const oad = '20140200';
+    const result = createStandardResult("电表状态", oad, dataBuffer);
+    try {
+        const parsedWords = parseStatusWordsFromAxdrArray(dataBuffer);
+        if (!parsedWords.length) throw new Error('无法解析状态字数组');
+
+        const words = parsedWords.map((word, index) => format698StatusWord(word.statusWord, word, index + 1));
+        result.value = {
+            word1: words[0] || null,
+            word2: words[1] || null,
+            word3: words[2] || null,
+            words
+        };
+
+        setSuccessResult(result, {
+            statusWords: words,
+            statusWord: words[0]?.rawValue ?? null,
+            statusWordHex: words[0]?.statusWordHex ?? null,
+            statusBits: words[0] ? decodeMeterStatusBits(words[0].rawValue) : []
+        }, { generic: { dataType: 'array' } });
+    } catch (e) {
+        setErrorResult(result, e.message);
+    }
+
+    return result;
+}
+
 /**
- * 解析电表运行状态字2 - 与645协议格式保持一致
+ * 解析电表运行状态字1或状态字数组
  * @param {Buffer} dataBuffer - 数据缓冲区
  * @returns {Object} 解析结果
  */
 
 function parseMeterStatus(dataBuffer, oad = '20140201') {
-    const result = createStandardResult("电表状态", oad, dataBuffer);
-    try {
-        // 1. 读取原始状态字（小端）
-        const statusWordLe = parseMeterStatusOptimized(dataBuffer);
-
-        // 2. 转换为大端，用于大端逻辑判断
-        const statusWordBe = toBigEndian16(statusWordLe);
-
-        if (statusWordBe !== null) {
-            const valTmp = statusWordBe & 0xFFFF;
-            const bin = valTmp.toString(2).padStart(16, '0'); // 最高位bit15在最左
-
-            // 3. 大端判断：bit0 是最左边的最高位
-            result.value = {
-                rawValue: valTmp,
-                binary: bin,
-                keys: {
-                    'bit15 时钟故障': bin[0] === '1',
-                    'bit14 透支状态': bin[1] === '1',
-                    'bit13 存储器故障或损坏': bin[2] === '1',
-                    'bit12 内部程序错误': bin[3] === '1',
-                    'bit11 保留': bin[4] === '1',
-                    'bit10 保留': bin[5] === '1',
-                    'bit9  ESAM错误': bin[6] === '1',
-                    'bit8  控制回路错误': bin[7] === '1',
-                    'bit7  保留': bin[8] === '1',
-                    'bit6  保留': bin[9] === '1',
-                    'bit5  无功功率方向反向': bin[10] === '1',
-                    'bit4  有功功率方向反向': bin[11] === '1',
-                    'bit3  停电抄表电池欠压': bin[12] === '1',
-                    'bit2  时钟电池欠压': bin[13] === '1',
-                    'bit1  需量积算方式': bin[14] === '1',
-                    'bit0  保留': bin[15] === '1'
-                }
-            };
-
-            setSuccessResult(result, {
-                timestamp: null,
-                statusWord: valTmp,
-                statusWordHex: valTmp.toString(16).padStart(4, '0').toUpperCase(),
-                statusBits: decodeMeterStatusBits(valTmp)
-            }, { generic: { dataType: 'bit-string' } });
-        } else {
-            throw new Error("无法解析状态字");
-        }
-
-    } catch (e) {
-        console.error('parseMeterStatus错误:', e.message);
-        setErrorResult(result, e.message);
-    }
-
-    return result;
+    if (oad === '20140200') return parseMeterStatusArray698(dataBuffer);
+    return parseMeterStatusWord698(dataBuffer, oad, "电表状态");
 }
 
-
 /**
- * 解析电表运行状态字3（20140203）- 按操作类位义输出字段
+ * 解析电表运行状态字3（20140203）
  */
 function parseMeterStatusWord3(dataBuffer) {
-    const oad = '20140203';
-    const result = createStandardResult("电表运行状态字3", oad, dataBuffer);
-    try {
-        const bitStringStatus = parseStatusWordFromAxdrBitString(dataBuffer);
-        const statusWord = bitStringStatus?.statusWord ?? parseMeterStatusOptimized(dataBuffer);
-        if (statusWord === null) throw new Error('无法解析状态字');
-
-        const val16 = statusWord & 0xFFFF; // 低16位
-        // binary按最终状态字数值输出(bit15..bit0)，与645状态字binary保持一致。
-        const bin = val16.toString(2).padStart(16, '0');
-
-        result.value = {
-            rawValue: val16,
-            binary: bin,
-            ...(bitStringStatus?.binaryLowToHigh ? { binaryLowToHigh: bitStringStatus.binaryLowToHigh } : {}),
-            ...(bitStringStatus?.binaryHighToLow ? { binaryHighToLow: bitStringStatus.binaryHighToLow } : {})
-        };
-
-        setSuccessResult(result, {
-            statusWord: val16,
-            statusWordHex: val16.toString(16).padStart(4, '0').toUpperCase(),
-            statusBits: decodeMeterStatusBits(val16)
-        }, { generic: { dataType: 'bit-string' } });
-    } catch (e) {
-        setErrorResult(result, e.message);
-    }
-    return result;
+    return parseMeterStatusWord698(dataBuffer, '20140203', "电表运行状态字3");
 }
 
 /**
- * 解析电表运行状态字2（20140202）- 返回原始位数组，不强加语义
+ * 解析电表运行状态字2（20140202）
  */
 function parseMeterStatusWord2(dataBuffer) {
-    const oad = '20140202';
-    const result = createStandardResult("电表运行状态字2", oad, dataBuffer);
-    try {
-        const bitStringStatus = parseStatusWordFromAxdrBitString(dataBuffer);
-        const statusWord = bitStringStatus?.statusWord ?? parseMeterStatusOptimized(dataBuffer);
-        if (statusWord === null) throw new Error('无法解析状态字');
-
-        const val16 = statusWord & 0xFFFF;
-        // binary按最终状态字数值输出(bit15..bit0)，与645状态字binary保持一致。
-        const bin = val16.toString(2).padStart(16, '0');
-
-        result.value = {
-            rawValue: val16,
-            binary: bin,
-            ...(bitStringStatus?.binaryLowToHigh ? { binaryLowToHigh: bitStringStatus.binaryLowToHigh } : {}),
-            ...(bitStringStatus?.binaryHighToLow ? { binaryHighToLow: bitStringStatus.binaryHighToLow } : {}),
-            bits: decodeMeterStatusBits(val16)
-        };
-
-        setSuccessResult(result, { statusWord: val16, statusWordHex: val16.toString(16).padStart(4, '0').toUpperCase(), statusBits: decodeMeterStatusBits(val16) }, { generic: { dataType: 'bit-string' } });
-    } catch (e) {
-        setErrorResult(result, e.message);
-    }
-    return result;
+    return parseMeterStatusWord698(dataBuffer, '20140202', "电表运行状态字2");
 }
 
 /**
