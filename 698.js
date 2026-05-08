@@ -140,6 +140,7 @@ const OAD_CATEGORIES = {
     BATTERY_VOLTAGE: {
         "CLOCK_BATTERY_VOLTAGE": { oad: "20110200", desc: "时钟电池电压", type: "double-long-unsigned", unit: "V", scale: -2 },
         "POWER_DOWN_READING_BATTERY_VOLTAGE": { oad: "20120200", desc: "停电抄表电池电压", type: "double-long-unsigned", unit: "V", scale: -2 },
+        "CLOCK_BATTERY_WORK_TIME": { oad: "20130200", desc: "时钟电池工作时间", type: "double-long-unsigned", unit: "min", scale: 0 },
     },
     FREEZE_DATA: {
         "DAILY_FREEZE": { oad: "50040200", desc: "日冻结", requestType: "record" },
@@ -1781,6 +1782,48 @@ function parseBatteryVoltage(dataBuffer, oad) {
     return result;
 }
 
+/**
+ * 解析时钟电池工作时间（分钟）
+ * @param {Buffer} dataBuffer - 数据缓冲区
+ * @param {string} oad - OAD标识
+ * @returns {Object} 解析结果
+ */
+function parseClockBatteryWorkTime(dataBuffer, oad) {
+    const oadInfo = getOADInfo(oad);
+    const result = createStandardResult(oadInfo ? oadInfo.desc : "时钟电池工作时间", oad, dataBuffer);
+
+    try {
+        const { result: genericResult } = enhancedParseData(dataBuffer, oad.slice(0, 4), oad.slice(4, 6));
+
+        if (genericResult.dataType !== '双长无符号整数' || typeof genericResult.parsedValue !== 'number') {
+            throw new Error(`时钟电池工作时间数据格式不正确: ${genericResult.dataType}`);
+        }
+
+        const rawMinutes = genericResult.parsedValue;
+        result.value = rawMinutes;
+
+        setSuccessResult(result, [{
+            type: oadInfo ? oadInfo.desc : "时钟电池工作时间",
+            rawValue: rawMinutes,
+            minutes: rawMinutes,
+            workMinutes: rawMinutes,
+            clock_battery_work_min: rawMinutes,
+            unit: "min",
+            description: `${oadInfo ? oadInfo.desc : "时钟电池工作时间"} ${rawMinutes}分钟`
+        }], {
+            unit: "min",
+            scale: 0,
+            count: 1,
+            generic: genericResult
+        });
+
+    } catch (e) {
+        setErrorResult(result, e.message);
+    }
+
+    return result;
+}
+
 function parseEnergyData(dataBuffer, oad) {
     const result = createStandardResult("电能数据", oad, dataBuffer);
     try {
@@ -2277,6 +2320,7 @@ function oadParserRouter(payload, oad) {
     if (oad === '40070205') return parseLCDDecimalDigits(payload); //抄读当前组合有功电能数据块
     if (oad === '20110200') return parseBatteryVoltage(payload, oad); // 时钟电池电压
     if (oad === '20120200') return parseBatteryVoltage(payload, oad); // 停电抄表电池电压
+    if (oad === '20130200') return parseClockBatteryWorkTime(payload, oad); // 时钟电池工作时间
     // 通用兜底
     const oadInfo = getOADInfo(oad) || { desc: "通用数据" };
     const genericStdResult = createStandardResult(oadInfo.desc, oad, payload);

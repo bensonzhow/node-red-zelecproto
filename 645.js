@@ -755,6 +755,9 @@ function decode645(_msg) {
                 unit: 'V',
                 description: `${di === '02800008' ? '时钟电池电压' : '停电抄表电池电压'}: ${v.toFixed(2)}V`
             };
+        } else if (di === '0280000A' && arrPush.length >= 8) {
+            // 0280000A: 内部电池工作时间，4字节，单位分
+            value = bytesToIntBE(arrPush.slice(-4).reverse());
         } else if (di === '0400040A' && arrPush.length >= 7) {
             // 无功脉冲常数：DI(4) + N3(3字节BCD，小端)
             const dataBytes = arrPush.slice(4, 7); // LE：低字节在前
@@ -768,13 +771,7 @@ function decode645(_msg) {
         } else if (di === '03300D01' && arrPush.length >= 16) {
             value = parseCoverOpenLast645(arrPush);
         } else {
-            // 未匹配的DI，返回去偏移(−0x33)后的原始数据，便于排查/厂商私有解析
-            value = {
-                rawMinus33: bytesToHex(arrPush).replace(/\s+/g, ''),           // 含DI(4B) + 数据
-                di,
-                data: bytesToHex(arrPush.slice(4)).replace(/\s+/g, ''),        // 纯数据部分（不含DI）
-                note: '未识别DI，已返回去0x33的原始数据'
-            };
+            value = parseGeneric645Data(di, arrPush);
         }
     } catch (e) {
         return Object.assign(result, { ok: false, reason: 'decode_exception', exec_addr, di, ctrl, len, raw: put, err: String(e) });
@@ -886,6 +883,44 @@ function bcdDigitsStrLE(bytes) {
     }
     s = s.replace(/^0+/, '') || '0';
     return s;
+}
+
+function parseGeneric645Data(di, arrPush) {
+    const dataBytes = Array.from(arrPush.slice(4));
+    const dataHex = bytesToHex(dataBytes).replace(/\s+/g, '');
+    const result = {
+        rawMinus33: bytesToHex(arrPush).replace(/\s+/g, ''),
+        di,
+        data: dataHex,
+        length: dataBytes.length,
+        note: '未识别DI，已按通用格式解析候选值'
+    };
+
+    if (dataBytes.length === 0) return result;
+
+    result.uintLE = bytesToUInt(dataBytes, true);
+    result.uintBE = bytesToUInt(dataBytes, false);
+
+    try {
+        result.bcdLE = bcdLEToInt(dataBytes);
+        result.bcdText = bcdDigitsStrLE(dataBytes);
+    } catch (_) {
+        result.bcdLE = null;
+    }
+
+    if (dataBytes.every(b => b >= 0x20 && b <= 0x7E)) {
+        result.ascii = Buffer.from(dataBytes).toString('ascii');
+    }
+
+    return result;
+}
+
+function bytesToUInt(bytes, littleEndian) {
+    if (!bytes || bytes.length === 0) return null;
+    const arr = littleEndian ? bytes.slice().reverse() : bytes;
+    const hex = Buffer.from(arr).toString('hex') || '0';
+    const value = BigInt(`0x${hex}`);
+    return value <= BigInt(Number.MAX_SAFE_INTEGER) ? Number(value) : value.toString();
 }
 
 
