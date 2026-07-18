@@ -714,6 +714,10 @@ function decode645(_msg) {
             result.payload = { data: items, value };             // 附带明细（含 rawBCD）
         } else if (di === '04000402' && arrPush.length >= 8) {
             value = Buffer.from(arrPush.slice(4).reverse()).toString('hex').toUpperCase();
+        } else if (di === '0400040B' && arrPush.length >= 14) {
+            // 电表型号：DL/T 645-2007 规定为 10 字节 ASCII，不足部分以 NUL(0x00) 补齐。
+            const modelBytes = arrPush.slice(4, 14);
+            value = Buffer.from(modelBytes.filter(b => b !== 0x00)).toString('ascii');
         } else if (arrPub.includes(di) && arrPush.length >= 8) {
             const v = bytesToIntBE(arrPush.slice(4, 8).reverse());
             value = Math.round(v / 100 * 100) / 100;

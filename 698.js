@@ -102,6 +102,7 @@ const OAD_CATEGORIES = {
         "METER_ADDRESS": { oad: "40010200", desc: "电表地址", type: "octet-string" },
         "METER_SERIAL": { oad: "40020200", desc: "电表序列号", type: "octet-string" },
         "METER_DATETIME": { oad: "40000200", desc: "电表时钟", type: "date-time" },
+        "METER_MODEL": { oad: "410B0200", desc: "电表型号", type: "visible-string" },
     },
     ENERGY_DATA: {
         "COMBINED_ACTIVE_ENERGY": { oad: "00000200", desc: "组合有功电能", type: "double-long-unsigned", unit: "kWh", scale: -2 },
