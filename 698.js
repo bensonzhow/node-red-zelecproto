@@ -822,6 +822,36 @@ function enhancedParseData(dataBuffer, oi, attributeId) {
                 consumed += (L.size + L.len);
                 break;
             }
+            case 0x50:
+            case 0x51:
+            case 0x52:
+            case 0x53:
+            case 0x54:
+            case 0x55:
+            case 0x56:
+            case 0x57:
+            case 0x58:
+            case 0x59:
+            case 0x5A:
+            case 0x5B:
+            case 0x5C:
+            case 0x5D:
+            case 0x5E:
+            case 0x5F: {
+                result.dataType = `扩展数据(0x${dataType.toString(16).toUpperCase()})`;
+                if (actualData.length >= 4) {
+                    result.parsedValue = {
+                        hex: actualData.slice(0, 4).toString('hex').toUpperCase(),
+                        uint32BE: actualData.readUInt32BE(0),
+                        uint32LE: actualData.readUInt32LE(0)
+                    };
+                    consumed += 4;
+                } else {
+                    result.parsedValue = actualData.toString('hex').toUpperCase();
+                    consumed += actualData.length;
+                }
+                break;
+            }
             case 0x10: result.dataType = "长整数"; if (actualData.length >= 2) { result.parsedValue = actualData.readInt16BE(0); consumed += 2; } break;
             case 0x11: // unsigned (8-bit)
                 result.dataType = "无符号整数";
