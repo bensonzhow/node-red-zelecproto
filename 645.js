@@ -480,9 +480,10 @@ function decode645(_msg) {
         } else if (di == '04000401') {
             //通信地址解析
             value = Buffer.from(arrPush.slice(-6).reverse()).toString('hex').toUpperCase()
-        } else if (di === '03370000' && arrPush.length >= 7) {
-            // 电源异常事件总次数（3字节无符号数）
-            value = bytesToIntBE(arrPush.slice(-3).reverse());
+        } else if (['03360000', '03370000'].includes(di) && arrPush.length >= 7) {
+            // 负荷开关误动作/电源异常事件总次数：N3，小端BCD，单位次。
+            const countBytes = arrPush.slice(4, 7);
+            value = bcdLEToInt(countBytes);
         } else if (di === '04000105' && arrPush.length >= 2) {
             value = bytesToIntBE(arrPush.slice(-2).reverse());
         } else if (di === '03300100' && arrPush.length >= 3) {

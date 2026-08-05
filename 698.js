@@ -137,6 +137,10 @@ const OAD_CATEGORIES = {
         "METER_STATUS_WORD2": { oad: "20140202", desc: "电表运行状态字2", type: "bit-string" },
         "METER_STATUS_WORD3": { oad: "20140203", desc: "电表运行状态字3（操作类）", type: "bit-string" },
         "POWER_ABNORMAL_EVENT_COUNT": { oad: "302C0701", desc: "电源异常事件总次数", type: "structure" },
+        "LOAD_SWITCH_MALOP_RECORD_COUNT": { oad: "302B0400", desc: "负荷开关误动作事件当前记录数", type: "long-unsigned", unit: "次", scale: 0 },
+        "LOAD_SWITCH_MALOP_TOTAL_COUNT": { oad: "302B0701", desc: "负荷开关误动作事件累计发生次数", type: "structure", unit: "次", scale: 0 },
+        "METERING_CHIP_FAULT_RECORD_COUNT": { oad: "302F0400", desc: "计量芯片故障事件当前记录数", type: "long-unsigned", unit: "次", scale: 0 },
+        "METERING_CHIP_FAULT_TOTAL_COUNT": { oad: "302F0701", desc: "计量芯片故障事件累计发生次数", type: "structure", unit: "次", scale: 0 },
     },
     BATTERY_VOLTAGE: {
         "CLOCK_BATTERY_VOLTAGE": { oad: "20110200", desc: "时钟电池电压", type: "double-long-unsigned", unit: "V", scale: -2 },
@@ -1274,6 +1278,86 @@ function parsePowerFailureEventCount(dataBuffer) {
 }
 
 /**
+ * 解析事件对象类属性4：当前记录数（long-unsigned）。
+ */
+function parseEventRecordCount(dataBuffer, oad, eventName) {
+    const result = createStandardResult(`${eventName}当前记录数`, oad, dataBuffer);
+    try {
+        const { result: generic } = enhancedParseData(dataBuffer, oad.slice(0, 4), '04');
+        let count = null;
+
+        if (generic.dataType === '长无符号整数' && typeof generic.parsedValue === 'number') {
+            count = generic.parsedValue;
+        } else if (generic.dataType === '无符号整数' && typeof generic.parsedValue === 'number') {
+            // 兼容少数设备使用 unsigned 返回小于256的记录数。
+            count = generic.parsedValue;
+        } else if (generic.dataType === '双长无符号整数' && typeof generic.parsedValue === 'number') {
+            // 兼容厂商扩展的32位记录数。
+            count = generic.parsedValue;
+        }
+
+        if (count === null) {
+            throw new Error(`当前记录数应为long-unsigned，实际为${generic.dataType}`);
+        }
+
+        result.value = count;
+        setSuccessResult(result, [{ label: '当前记录数', value: count, unit: '次' }], {
+            unit: '次', scale: 0, count: 1, generic
+        });
+    } catch (e) {
+        setErrorResult(result, e.message);
+    }
+    return result;
+}
+
+/**
+ * 解析事件对象类属性7索引1：累计发生次数和累计时间。
+ */
+function parseEventOccurrenceStatistics(dataBuffer, oad, eventName) {
+    const result = createStandardResult(`${eventName}累计统计`, oad, dataBuffer);
+    try {
+        const { result: generic } = enhancedParseData(dataBuffer, oad.slice(0, 4), '07');
+        const values = [];
+
+        function collectNumbers(node) {
+            if (!node || typeof node !== 'object') return;
+            const numericTypes = new Set([
+                '无符号整数', '长无符号整数', '双长无符号整数',
+                '长整数', '双长整数'
+            ]);
+            if (numericTypes.has(node.dataType) && typeof node.parsedValue === 'number') {
+                values.push(node.parsedValue);
+                return;
+            }
+            if (Array.isArray(node.parsedValue)) {
+                for (const item of node.parsedValue) collectNumbers(item);
+            }
+        }
+        collectNumbers(generic);
+
+        if (values.length === 0) {
+            throw new Error('未能在当前值记录表中识别出事件发生次数');
+        }
+
+        const occurrenceCount = values[0];
+        const accumulatedSeconds = values.length > 1 ? values[1] : null;
+        result.value = occurrenceCount;
+        setSuccessResult(result, [{
+            label: '累计发生次数',
+            value: occurrenceCount,
+            unit: '次',
+            accumulatedSeconds,
+            accumulatedTimeUnit: accumulatedSeconds === null ? null : 's'
+        }], {
+            unit: '次', scale: 0, count: 1, generic
+        });
+    } catch (e) {
+        setErrorResult(result, e.message);
+    }
+    return result;
+}
+
+/**
  * 解析 电源异常事件总次数 (302C0701)
  * 兼容多厂商格式：可能返回结构体/数组嵌套的一个或多个无符号长整数。
  * value: 返回总次数（若存在多个数值则求和），data: 列出拆解项
@@ -2343,6 +2427,10 @@ function oadParserRouter(payload, oad) {
     if (oad === '301B0201') return parseMeterCoverDetailData(payload); // 上一次开盖详细数据
     if (oad === '301B0200') return parseLastOpenCoverRecord(payload);   // 上一次开盖事件记录（RecordRow）
     if (oad === '302C0701') return parsePowerAbnormalCount(payload); // 电源异常事件总次数
+    if (oad === '302B0400') return parseEventRecordCount(payload, oad, '负荷开关误动作事件');
+    if (oad === '302B0701') return parseEventOccurrenceStatistics(payload, oad, '负荷开关误动作事件');
+    if (oad === '302F0400') return parseEventRecordCount(payload, oad, '计量芯片故障事件');
+    if (oad === '302F0701') return parseEventOccurrenceStatistics(payload, oad, '计量芯片故障事件');
     if (oad === '20140200' || oad === '20140201') return parseMeterStatus(payload, oad);
     if (oad === '20140202') return parseMeterStatusWord2(payload);
     if (oad === '20140203') return parseMeterStatusWord3(payload);
