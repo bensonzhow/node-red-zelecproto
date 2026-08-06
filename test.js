@@ -23,17 +23,17 @@ let msg = {};
 
 
 
-// msg.payload=[
-//     {
-//         barcode:'1',
-//         payload : '685134234200006893068467567533336F16',
-//         proto : 645
-//     }
-// ]
+msg.payload=[
+    {
+        barcode:'1',
+        payload : '68 46 99 10 10 00 00 68 91 6E 34 34 63 36 5B 5C 3C 56 36 49 34 33 33 33 A7 33 33 33 33 33 33 33 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 32 A0 16',
+        proto : 645
+    }
+]
 
-// let nmsg = proto645(msg);
-// console.log(nmsg);
-// console.log(JSON.stringify(nmsg));
+let nmsg = proto645(msg);
+console.log(nmsg);
+console.log(JSON.stringify(nmsg));
 
 
 

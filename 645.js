@@ -459,8 +459,9 @@ function decode645(_msg) {
     const arrDaysZX = buildDays('000100'); // 结算正向总电能
     const arrDaysJSR = buildDays('000200'); // 结算反向总电能
     const arrPub = ['04000B01', '04000B02', '04000B03']; // A/B/C 相电流（瞬时）
-
+    
     let value = '';
+    let valueExt = {};
     try {
         // // —— 读数据"请求帧"：CTRL=0x11 且 LEN=0x04，仅含 DI，无数值 ——
         // if (ctrl === 0x11 && len === 0x04 && arrPush.length === 4) {
@@ -654,7 +655,94 @@ function decode645(_msg) {
             const s = '20' + Buffer.from(arrPush.slice(4).reverse()).toString('hex').toUpperCase();
             value = s.slice(0, 8);
         } else if (di === '03300101' && arrPush.length >= 10) {
-            value = '20' + Buffer.from(arrPush.slice(4, 10).reverse()).toString('hex').toUpperCase();
+            // 上1次电表清零记录：发生时刻(6B) + 操作者代码(4B) + N×(4B 小端BCD电能)
+            const afterDI = arrPush.slice(4);
+
+            // --- value: 保持原有简单字符串格式，兼容上层业务 ---
+            const dtHex = Buffer.from(afterDI.slice(0, 6).reverse()).toString('hex').toUpperCase();
+            // 全零或全F均表示未曾清零，不加世纪前缀以免被误判为乱码
+            value = (dtHex === '000000000000' || dtHex === 'FFFFFFFFFFFF') ? dtHex : ('20' + dtHex);
+
+            // --- valueExt: 结构化扩展对象 ---
+            // 1) 发生时刻（ss mm hh DD MM YY，BCD）
+            const timeBytes = afterDI.slice(0, 6);
+            const timeInfo = parseTimeBCD6or7(timeBytes);
+            const occurrenceTime = timeInfo ? timeInfo.formatted : null;
+            const occurrenceTimeRaw = Buffer.from(timeBytes).toString('hex').toUpperCase();
+
+            // 2) 操作者代码（4B BCD，以 hex 展示）
+            const opBytes = afterDI.slice(6, 10);
+            const operatorCode = Buffer.from(opBytes).toString('hex').toUpperCase();
+
+            // 3) 电能项：4B 一组，小端 BCD，2 位小数（共24项）
+            const energyLabels = [
+                // --- 总电能 (4项) ---
+                { label: '清零前正向有功总电能',           unit: 'kWh',   scale: 2 },
+                { label: '清零前反向有功总电能',           unit: 'kWh',   scale: 2 },
+                { label: '清零前第一象限无功总电能',       unit: 'kvarh', scale: 2 },
+                { label: '清零前第二象限无功总电能',       unit: 'kvarh', scale: 2 },
+                { label: '清零前第三象限无功总电能',       unit: 'kvarh', scale: 2 },
+                { label: '清零前第四象限无功总电能',       unit: 'kvarh', scale: 2 },
+                // --- A相 (6项) ---
+                { label: '清零前A相正向有功电能',          unit: 'kWh',   scale: 2 },
+                { label: '清零前A相反向有功电能',          unit: 'kWh',   scale: 2 },
+                { label: '清零前A相第一象限无功电能',      unit: 'kvarh', scale: 2 },
+                { label: '清零前A相第二象限无功电能',      unit: 'kvarh', scale: 2 },
+                { label: '清零前A相第三象限无功电能',      unit: 'kvarh', scale: 2 },
+                { label: '清零前A相第四象限无功电能',      unit: 'kvarh', scale: 2 },
+                // --- B相 (6项) ---
+                { label: '清零前B相正向有功电能',          unit: 'kWh',   scale: 2 },
+                { label: '清零前B相反向有功电能',          unit: 'kWh',   scale: 2 },
+                { label: '清零前B相第一象限无功电能',      unit: 'kvarh', scale: 2 },
+                { label: '清零前B相第二象限无功电能',      unit: 'kvarh', scale: 2 },
+                { label: '清零前B相第三象限无功电能',      unit: 'kvarh', scale: 2 },
+                { label: '清零前B相第四象限无功电能',      unit: 'kvarh', scale: 2 },
+                // --- C相 (6项) ---
+                { label: '清零前C相正向有功电能',          unit: 'kWh',   scale: 2 },
+                { label: '清零前C相反向有功电能',          unit: 'kWh',   scale: 2 },
+                { label: '清零前C相第一象限无功电能',      unit: 'kvarh', scale: 2 },
+                { label: '清零前C相第二象限无功电能',      unit: 'kvarh', scale: 2 },
+                { label: '清零前C相第三象限无功电能',      unit: 'kvarh', scale: 2 },
+                { label: '清零前C相第四象限无功电能',      unit: 'kvarh', scale: 2 }
+            ];
+            const energies = [];
+            let off = 10; // 跳过发生时刻(6) + 操作者代码(4)
+            while (off + 4 <= afterDI.length) {
+                const seg = afterDI.slice(off, off + 4);
+                try {
+                    const rawVal = bcdLEToInt(seg);
+                    const labelIdx = energies.length;
+                    const info = energyLabels[labelIdx] || { label: `电能项${labelIdx + 1}`, unit: '?', scale: 2 };
+                    const scaled = rawVal / Math.pow(10, info.scale);
+                    energies.push({
+                        label: info.label,
+                        rawBCD: bytesToHex(seg).replace(/\s+/g, ''),
+                        rawValue: rawVal,
+                        value: scaled,
+                        unit: info.unit
+                    });
+                    off += 4;
+                } catch (_) {
+                    // 遇到非BCD数据（如填充0xFF），停止解析
+                    break;
+                }
+            }
+
+            // 如有未消费的尾部字节，保留 raw
+            const extraRaw = off < afterDI.length
+                ? bytesToHex(afterDI.slice(off)).replace(/\s+/g, '')
+                : null;
+
+            valueExt = {
+                type: 'clearing_record',
+                occurrenceTime,
+                occurrenceTimeRaw,
+                operatorCode,
+                energies,
+                noRecord: occurrenceTime === null,
+                extraRaw,
+                rawMinus33: bytesToHex(arrPush).replace(/\s+/g, '')
+            };
         } else if (di === '03300D00' && arrPush.length >= 4) {
             value = bytesToIntBE(arrPush.slice(4).reverse());
         }
@@ -787,7 +875,9 @@ function decode645(_msg) {
         type: 'data_response',
         exec_addr,
         addr_bytes_hex,
-        ctrl, len, di, value,
+        ctrl, len, di, 
+        value,
+        valueExt,
         success: cs_ok,
         raw: put
     });
