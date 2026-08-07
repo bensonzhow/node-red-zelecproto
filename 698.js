@@ -137,6 +137,9 @@ const OAD_CATEGORIES = {
         "METER_STATUS_WORD1": { oad: "20140201", desc: "电表运行状态字1", type: "bit-string" },
         "METER_STATUS_WORD2": { oad: "20140202", desc: "电表运行状态字2", type: "bit-string" },
         "METER_STATUS_WORD3": { oad: "20140203", desc: "电表运行状态字3（操作类）", type: "bit-string" },
+        "LOAD_SWITCH_MALOP_LAST_RECORD": { oad: "302B0200", desc: "上一次负荷开关误动作事件", type: "record", requestType: "record" },
+        "POWER_ABNORMAL_LAST_RECORD": { oad: "302C0200", desc: "上一次电源异常事件", type: "record", requestType: "record" },
+        "METERING_CHIP_FAULT_LAST_RECORD": { oad: "302F0200", desc: "上一次计量芯片故障事件", type: "record", requestType: "record" },
         "POWER_ABNORMAL_EVENT_COUNT": { oad: "302C0701", desc: "电源异常事件总次数", type: "structure" },
         "LOAD_SWITCH_MALOP_RECORD_COUNT": { oad: "302B0400", desc: "负荷开关误动作事件当前记录数", type: "long-unsigned", unit: "次", scale: 0 },
         "LOAD_SWITCH_MALOP_TOTAL_COUNT": { oad: "302B0701", desc: "负荷开关误动作事件累计发生次数", type: "structure", unit: "次", scale: 0 },
@@ -1474,6 +1477,53 @@ function parseLastOpenCoverRecord(payload) {
     return result;
 }
 
+const LAST_STANDARD_EVENT_RECORDS = {
+    '302B0200': '负荷开关误动作事件',
+    '302C0200': '电源异常事件',
+    '302F0200': '计量芯片故障事件'
+};
+
+/** 解析属性2中选中的上一条标准事件记录。 */
+function parseLastStandardEventRecord(dataBuffer, oad, eventName) {
+    const result = createStandardResult(`上一次${eventName}`, oad, dataBuffer);
+    try {
+        const { count, row } = parseSelectedRecordRow(dataBuffer);
+        const valueOf = oi => row.find(cell => cell.oi === oi && cell.feature === 0)?.value ?? null;
+        const baseOis = new Set(['2022', '201E', '2020', '2024', '3300']);
+        const associatedData = row.filter(cell => !baseOis.has(cell.oi)).map(cell => ({
+            oad: cell.oad,
+            rawOad: cell.rawOad,
+            name: cell.name,
+            feature: cell.feature,
+            featureName: cell.featureName,
+            value: cell.value,
+            rawValue: cell.rawValue,
+            unit: cell.unit,
+            scale: cell.scale,
+            rawData: cell.rawData
+        }));
+
+        result.value = {
+            type: 'standard_event_record',
+            eventName,
+            ok: true,
+            hasRecord: count > 0,
+            recordIndex: 1,
+            sequence: valueOf('2022'),
+            startTime: valueOf('201E'),
+            endTime: valueOf('2020'),
+            source: valueOf('2024'),
+            reportStatus: valueOf('3300'),
+            associatedData,
+            rawData: Buffer.from(dataBuffer).toString('hex').toUpperCase()
+        };
+        setSuccessResult(result, result.value, { count });
+    } catch (e) {
+        setErrorResult(result, e.message);
+    }
+    return result;
+}
+
 const EVENT_ASSOCIATION_FEATURES = {
     0: '未指定',
     1: '事件发生前',
@@ -2210,6 +2260,7 @@ function oadParserRouter(payload, oad) {
     if (oad === '30130200') return parseMeterResetEventRecord(payload); // 电表清零事件最近记录
     if (oad === '301B0400') return parseEventRecordCount(payload, oad, '开表盖事件'); // 当前记录数
     if (oad === '301B0200') return parseLastOpenCoverRecord(payload);   // 上一次开盖事件记录（RecordRow）
+    if (LAST_STANDARD_EVENT_RECORDS[oad]) return parseLastStandardEventRecord(payload, oad, LAST_STANDARD_EVENT_RECORDS[oad]);
     if (oad === '302C0701') return parsePowerAbnormalCount(payload); // 电源异常事件总次数
     if (oad === '302B0400') return parseEventRecordCount(payload, oad, '负荷开关误动作事件');
     if (oad === '302B0701') return parseEventOccurrenceStatistics(payload, oad, '负荷开关误动作事件');
@@ -2363,6 +2414,10 @@ function parseGetResponse(apduBuffer, result) {
     }
     if (oad === '30130200') { // 上一次电表清零事件记录
         result.unifiedFormat.data = parseMeterResetEventRecord(dataBuffer);
+        return;
+    }
+    if (LAST_STANDARD_EVENT_RECORDS[oad]) {
+        result.unifiedFormat.data = parseLastStandardEventRecord(dataBuffer, oad, LAST_STANDARD_EVENT_RECORDS[oad]);
         return;
     }
 

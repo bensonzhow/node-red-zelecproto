@@ -775,6 +775,8 @@ function decode645(_msg) {
             };
         } else if (di === '03300D01' && arrPush.length >= 16) {
             value = parseCoverOpenLast645(arrPush);
+        } else if (di === '03360001' || di === '03370001') {
+            value = parseLast645StandardEventRecord(arrPush, di);
         } else {
             value = parseGeneric645Data(di, arrPush);
         }
@@ -1076,6 +1078,80 @@ function parseCoverOpenLast645(arrPush) {
         energies,
         rawData: bytesToHex(data).replace(/\s+/g, ''),
         note: '按645协议解析2个时间和开盖前后各6项电能'
+    };
+}
+
+const LAST_645_EVENT_RECORDS = {
+    '03360001': {
+        eventName: '负荷开关误动作事件',
+        hasState: true,
+        energies: [
+            ['startForwardActive', '发生时刻正向有功总电能'],
+            ['startReverseActive', '发生时刻反向有功总电能'],
+            ['endForwardActive', '结束时刻正向有功总电能'],
+            ['endReverseActive', '结束时刻反向有功总电能']
+        ]
+    },
+    '03370001': {
+        eventName: '电源异常事件',
+        hasState: false,
+        energies: [
+            ['startForwardActive', '发生时刻正向有功总电能'],
+            ['startReverseActive', '发生时刻反向有功总电能']
+        ]
+    }
+};
+
+/** 解析645上1次负荷开关误动作/电源异常记录。 */
+function parseLast645StandardEventRecord(arrPush, di) {
+    const config = LAST_645_EVENT_RECORDS[di];
+    const data = arrPush.slice(4);
+    const expectedLength = 12 + (config.hasState ? 1 : 0) + config.energies.length * 4;
+    if (data.length < expectedLength) {
+        return { type: 'standard_event_record', eventName: config.eventName, ok: false, reason: 'data_too_short', rawData: bytesToHex(data).replace(/\s+/g, '') };
+    }
+
+    let offset = 12;
+    const state = config.hasState ? data[offset++] : null;
+    const associatedData = config.energies.map(([key, label]) => {
+        const segment = data.slice(offset, offset + 4);
+        offset += 4;
+        const valid = !segment.every(b => b === 0xFF) && segment.every(b => ((b >> 4) & 0x0F) <= 9 && (b & 0x0F) <= 9);
+        const rawValue = valid ? bcdLEToInt(segment) : null;
+        return {
+            key,
+            label,
+            value: valid ? rawValue / 100 : null,
+            rawValue,
+            unit: 'kWh',
+            scale: -2,
+            valid,
+            rawBCD: bytesToHex(segment).replace(/\s+/g, '')
+        };
+    });
+    const valueOf = key => associatedData.find(item => item.key === key)?.value ?? null;
+    const startTime = parse645DateTime(data.slice(0, 6));
+    const endTime = parse645DateTime(data.slice(6, 12));
+
+    return {
+        type: 'standard_event_record',
+        eventName: config.eventName,
+        ok: true,
+        hasRecord: startTime !== null,
+        recordIndex: 1,
+        sequence: null,
+        startTime,
+        endTime,
+        source: null,
+        reportStatus: null,
+        switchState: state,
+        switchStateName: state === null ? null : (state === 0 ? '通' : state === 1 ? '断' : '未知'),
+        startForwardActive: valueOf('startForwardActive'),
+        startReverseActive: valueOf('startReverseActive'),
+        endForwardActive: valueOf('endForwardActive'),
+        endReverseActive: valueOf('endReverseActive'),
+        associatedData,
+        rawData: bytesToHex(data).replace(/\s+/g, '')
     };
 }
 
