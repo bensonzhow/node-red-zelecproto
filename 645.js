@@ -459,9 +459,8 @@ function decode645(_msg) {
     const arrDaysZX = buildDays('000100'); // 结算正向总电能
     const arrDaysJSR = buildDays('000200'); // 结算反向总电能
     const arrPub = ['04000B01', '04000B02', '04000B03']; // A/B/C 相电流（瞬时）
-    
+
     let value = '';
-    let valueExt = {};
     try {
         // // —— 读数据"请求帧"：CTRL=0x11 且 LEN=0x04，仅含 DI，无数值 ——
         // if (ctrl === 0x11 && len === 0x04 && arrPush.length === 4) {
@@ -654,95 +653,8 @@ function decode645(_msg) {
         } else if (di === '04000101' && arrPush.length >= 8) {
             const s = '20' + Buffer.from(arrPush.slice(4).reverse()).toString('hex').toUpperCase();
             value = s.slice(0, 8);
-        } else if (di === '03300101' && arrPush.length >= 10) {
-            // 上1次电表清零记录：发生时刻(6B) + 操作者代码(4B) + N×(4B 小端BCD电能)
-            const afterDI = arrPush.slice(4);
-
-            // --- value: 保持原有简单字符串格式，兼容上层业务 ---
-            const dtHex = Buffer.from(afterDI.slice(0, 6).reverse()).toString('hex').toUpperCase();
-            // 全零或全F均表示未曾清零，不加世纪前缀以免被误判为乱码
-            value = (dtHex === '000000000000' || dtHex === 'FFFFFFFFFFFF') ? dtHex : ('20' + dtHex);
-
-            // --- valueExt: 结构化扩展对象 ---
-            // 1) 发生时刻（ss mm hh DD MM YY，BCD）
-            const timeBytes = afterDI.slice(0, 6);
-            const timeInfo = parseTimeBCD6or7(timeBytes);
-            const occurrenceTime = timeInfo ? timeInfo.formatted : null;
-            const occurrenceTimeRaw = Buffer.from(timeBytes).toString('hex').toUpperCase();
-
-            // 2) 操作者代码（4B BCD，以 hex 展示）
-            const opBytes = afterDI.slice(6, 10);
-            const operatorCode = Buffer.from(opBytes).toString('hex').toUpperCase();
-
-            // 3) 电能项：4B 一组，小端 BCD，2 位小数（共24项）
-            const energyLabels = [
-                // --- 总电能 (4项) ---
-                { label: '清零前正向有功总电能',           unit: 'kWh',   scale: 2 },
-                { label: '清零前反向有功总电能',           unit: 'kWh',   scale: 2 },
-                { label: '清零前第一象限无功总电能',       unit: 'kvarh', scale: 2 },
-                { label: '清零前第二象限无功总电能',       unit: 'kvarh', scale: 2 },
-                { label: '清零前第三象限无功总电能',       unit: 'kvarh', scale: 2 },
-                { label: '清零前第四象限无功总电能',       unit: 'kvarh', scale: 2 },
-                // --- A相 (6项) ---
-                { label: '清零前A相正向有功电能',          unit: 'kWh',   scale: 2 },
-                { label: '清零前A相反向有功电能',          unit: 'kWh',   scale: 2 },
-                { label: '清零前A相第一象限无功电能',      unit: 'kvarh', scale: 2 },
-                { label: '清零前A相第二象限无功电能',      unit: 'kvarh', scale: 2 },
-                { label: '清零前A相第三象限无功电能',      unit: 'kvarh', scale: 2 },
-                { label: '清零前A相第四象限无功电能',      unit: 'kvarh', scale: 2 },
-                // --- B相 (6项) ---
-                { label: '清零前B相正向有功电能',          unit: 'kWh',   scale: 2 },
-                { label: '清零前B相反向有功电能',          unit: 'kWh',   scale: 2 },
-                { label: '清零前B相第一象限无功电能',      unit: 'kvarh', scale: 2 },
-                { label: '清零前B相第二象限无功电能',      unit: 'kvarh', scale: 2 },
-                { label: '清零前B相第三象限无功电能',      unit: 'kvarh', scale: 2 },
-                { label: '清零前B相第四象限无功电能',      unit: 'kvarh', scale: 2 },
-                // --- C相 (6项) ---
-                { label: '清零前C相正向有功电能',          unit: 'kWh',   scale: 2 },
-                { label: '清零前C相反向有功电能',          unit: 'kWh',   scale: 2 },
-                { label: '清零前C相第一象限无功电能',      unit: 'kvarh', scale: 2 },
-                { label: '清零前C相第二象限无功电能',      unit: 'kvarh', scale: 2 },
-                { label: '清零前C相第三象限无功电能',      unit: 'kvarh', scale: 2 },
-                { label: '清零前C相第四象限无功电能',      unit: 'kvarh', scale: 2 }
-            ];
-            const energies = [];
-            let off = 10; // 跳过发生时刻(6) + 操作者代码(4)
-            while (off + 4 <= afterDI.length) {
-                const seg = afterDI.slice(off, off + 4);
-                try {
-                    const rawVal = bcdLEToInt(seg);
-                    const labelIdx = energies.length;
-                    const info = energyLabels[labelIdx] || { label: `电能项${labelIdx + 1}`, unit: '?', scale: 2 };
-                    const scaled = rawVal / Math.pow(10, info.scale);
-                    energies.push({
-                        label: info.label,
-                        rawBCD: bytesToHex(seg).replace(/\s+/g, ''),
-                        rawValue: rawVal,
-                        value: scaled,
-                        unit: info.unit
-                    });
-                    off += 4;
-                } catch (_) {
-                    // 遇到非BCD数据（如填充0xFF），停止解析
-                    break;
-                }
-            }
-
-            // 如有未消费的尾部字节，保留 raw
-            const extraRaw = off < afterDI.length
-                ? bytesToHex(afterDI.slice(off)).replace(/\s+/g, '')
-                : null;
-
-            valueExt = {
-                type: 'clearing_record',
-                occurrenceTime,
-                occurrenceTimeRaw,
-                operatorCode,
-                energies,
-                noRecord: occurrenceTime === null,
-                extraRaw,
-                rawMinus33: bytesToHex(arrPush).replace(/\s+/g, '')
-            };
+        } else if (/^033001(?:0[1-9]|0A)$/.test(di) && arrPush.length >= 10) {
+            value = parseMeterResetRecord645(arrPush, di);
         } else if (di === '03300D00' && arrPush.length >= 4) {
             value = bytesToIntBE(arrPush.slice(4).reverse());
         }
@@ -875,9 +787,7 @@ function decode645(_msg) {
         type: 'data_response',
         exec_addr,
         addr_bytes_hex,
-        ctrl, len, di, 
-        value,
-        valueExt,
+        ctrl, len, di, value,
         success: cs_ok,
         raw: put
     });
@@ -1048,82 +958,124 @@ function parseTimeBCD6or7(bytes) {
     };
 }
 
-// 解析“上一次开盖明细”（DI=03300D01）：arrPush = DATA-0x33 后的数组
+function parse645DateTime(bytes) {
+    if (!bytes || bytes.length !== 6) return null;
+    const parsed = parseTimeBCD6or7(bytes);
+    return parsed ? parsed.formatted : null;
+}
+
+// 解析电表清零记录（DI=03300101~0330010A）。
+// 数据结构：发生时刻(6B) + 操作者代码(4B) + 清零前电能(24项×4B，小端BCD，2位小数)。
+function parseMeterResetRecord645(arrPush, di) {
+    const data = arrPush.slice(4);
+    const eventTimeBytes = data.slice(0, 6);
+    const operatorBytes = data.slice(6, 10);
+
+    // 协议原始格式为YYMMDDhhmmss，不人为补世纪；业务时间单独返回格式化结果。
+    const eventTimeRaw = Buffer.from(eventTimeBytes.slice().reverse()).toString('hex').toUpperCase();
+    const eventTime = parse645DateTime(eventTimeBytes);
+    const operatorCode = operatorBytes.length === 4
+        ? Buffer.from(operatorBytes.slice().reverse()).toString('hex').toUpperCase()
+        : null;
+
+    const scopes = [
+        ['total', '', '总'], ['phaseA', 'A相', ''],
+        ['phaseB', 'B相', ''], ['phaseC', 'C相', '']
+    ];
+    const metrics = [
+        ['ForwardActive', '正向有功', 'kWh'], ['ReverseActive', '反向有功', 'kWh'],
+        ['ReactiveQ1', '第一象限无功', 'kvarh'], ['ReactiveQ2', '第二象限无功', 'kvarh'],
+        ['ReactiveQ3', '第三象限无功', 'kvarh'], ['ReactiveQ4', '第四象限无功', 'kvarh']
+    ];
+    const energyDefinitions = scopes.flatMap(([prefix, phase, total]) =>
+        metrics.map(([key, label, unit]) => [`${prefix}${key}`, `清零前${phase}${label}${total}电能`, unit])
+    );
+
+    const energies = energyDefinitions.map(([key, label, unit], index) => {
+        const segment = data.slice(10 + index * 4, 14 + index * 4);
+        const rawBCD = bytesToHex(segment).replace(/\s+/g, '');
+        const complete = segment.length === 4;
+        const unavailable = complete && segment.every(b => b === 0xFF);
+        let rawValue = null;
+        let valid = complete && !unavailable;
+
+        if (valid) {
+            try {
+                rawValue = bcdLEToInt(segment);
+            } catch (_) {
+                valid = false;
+            }
+        }
+
+        return {
+            key,
+            label,
+            value: valid ? rawValue / 100 : null,
+            unit,
+            scale: -2,
+            valid,
+            rawBCD
+        };
+    });
+
+    return {
+        type: 'meter_reset_record',
+        ok: data.length >= 106,
+        hasRecord: eventTime !== null,
+        recordIndex: parseInt(di.slice(-2), 16),
+        eventTime,
+        eventTimeRaw,
+        operatorCode,
+        energies,
+        rawData: bytesToHex(data).replace(/\s+/g, ''),
+    };
+}
+
+// 解析“上一次开盖明细”（DI=03300D01）：arrPush = DATA-0x33 后的数组。
+// 协议顺序：发生/结束时刻 + 开盖前6项电能 + 开盖后6项电能，每项电能4B、换算-2。
 function parseCoverOpenLast645(arrPush) {
-    // 结构：DI(4) + 发生时刻(6B) + 结束时刻(6B) + 能量(4项，小端 BCD，长度可为4B/5B/6B)
-    const data = arrPush.slice(4);           // 去掉 DI
-    if (data.length < 12) {
+    const data = arrPush.slice(4);
+    if (data.length < 60) {
         return { type: 'cover_open_record', ok: false, reason: 'data_too_short', rawData: bytesToHex(data).replace(/\s+/g, '') };
     }
 
-    // 1) 时间（优先按 6B+6B）
-    const startTimeBytes = data.slice(0, 6);
-    const endTimeBytes = data.slice(6, 12);
-    const start = parseTimeBCD6or7(startTimeBytes);
-    const end = parseTimeBCD6or7(endTimeBytes);
-
-    // 2) 能量段起始偏移
-    let off = 12;
-
-    // 3) 能量长度自适应检测（4×4B / 4×5B / 4×6B）
-    function isAllBCDNibbles(bs) {
-        for (let i = 0; i < bs.length; i++) {
-            const b = bs[i] & 0xFF, hi = (b >> 4) & 0x0F, lo = b & 0x0F;
-            if (hi > 9 || lo > 9) return false;
-        }
-        return true;
-    }
-    function parseEnergiesFlexible(bytes) {
-        const labels = ['开盖前正向有功总', '开盖前反向有功总', '开盖后正向有功总', '开盖后反向有功总'];
-
-        // 尝试 4B×4（scale=2）
-        if (bytes.length >= 16 && isAllBCDNibbles(bytes.slice(0, 16))) {
-            const out = [];
-            for (let i = 0; i < 4; i++) {
-                const seg = bytes.slice(i * 4, i * 4 + 4);
-                const val = bcdLEToInt(seg);
-                out.push({ label: labels[i], rawValue: val, kwh: val / 100, unit: 'kWh', bcdData: bcdDigitsStrLE(seg), bytes: bytesToHex(seg) });
-            }
-            return { list: out, used: 16, scale: 2 };
-        }
-        // 尝试 5B×4（scale=3）
-        if (bytes.length >= 20 && isAllBCDNibbles(bytes.slice(0, 20))) {
-            const out = [];
-            for (let i = 0; i < 4; i++) {
-                const seg = bytes.slice(i * 5, i * 5 + 5);
-                const val = bcdLEToInt(seg);
-                out.push({ label: labels[i], rawValue: val, kwh: val / 1000, unit: 'kWh', bcdData: bcdDigitsStrLE(seg), bytes: bytesToHex(seg) });
-            }
-            return { list: out, used: 20, scale: 3 };
-        }
-        // 尝试 6B×4（scale=4）
-        if (bytes.length >= 24 && isAllBCDNibbles(bytes.slice(0, 24))) {
-            const out = [];
-            for (let i = 0; i < 4; i++) {
-                const seg = bytes.slice(i * 6, i * 6 + 6);
-                const val = bcdLEToInt(seg);
-                out.push({ label: labels[i], rawValue: val, kwh: val / 10000, unit: 'kWh', bcdData: bcdDigitsStrLE(seg), bytes: bytesToHex(seg) });
-            }
-            return { list: out, used: 24, scale: 4 };
-        }
-        return { list: [], used: 0, scale: null };
-    }
-
-    const energiesBytes = data.slice(off);
-    const parsed = parseEnergiesFlexible(energiesBytes);
+    const energyDefinitions = [
+        ['beforeForwardActive', '开盖前正向有功总电能', 'kWh'],
+        ['beforeReverseActive', '开盖前反向有功总电能', 'kWh'],
+        ['beforeReactiveQ1', '开盖前第一象限无功总电能', 'kvarh'],
+        ['beforeReactiveQ2', '开盖前第二象限无功总电能', 'kvarh'],
+        ['beforeReactiveQ3', '开盖前第三象限无功总电能', 'kvarh'],
+        ['beforeReactiveQ4', '开盖前第四象限无功总电能', 'kvarh'],
+        ['afterForwardActive', '开盖后正向有功总电能', 'kWh'],
+        ['afterReverseActive', '开盖后反向有功总电能', 'kWh'],
+        ['afterReactiveQ1', '开盖后第一象限无功总电能', 'kvarh'],
+        ['afterReactiveQ2', '开盖后第二象限无功总电能', 'kvarh'],
+        ['afterReactiveQ3', '开盖后第三象限无功总电能', 'kvarh'],
+        ['afterReactiveQ4', '开盖后第四象限无功总电能', 'kvarh']
+    ];
+    const energies = energyDefinitions.map(([key, label, unit], index) => {
+        const segment = data.slice(12 + index * 4, 16 + index * 4);
+        const valid = !segment.every(b => b === 0xFF) && segment.every(b => ((b >> 4) & 0x0F) <= 9 && (b & 0x0F) <= 9);
+        const rawValue = valid ? bcdLEToInt(segment) : null;
+        return { key, label, value: valid ? rawValue / 100 : null, unit, scale: -2, valid, rawBCD: bytesToHex(segment).replace(/\s+/g, '') };
+    });
+    const valueOf = key => energies.find(item => item.key === key)?.value ?? null;
 
     return {
         type: 'cover_open_record',
         ok: true,
         di: '03300D01',
-        startTime: start ? start.formatted : null,
-        endTime: end ? end.formatted : null,
-        startTimeDetail: start,
-        endTimeDetail: end,
-        energies: parsed.list,          // 按顺序：前正、前反、后正、后反
-        scale: parsed.scale,            // 小数位（2/3/4）
+        startTime: parse645DateTime(data.slice(0, 6)),
+        endTime: parse645DateTime(data.slice(6, 12)),
+        beforeForwardActive: valueOf('beforeForwardActive'),
+        beforeReverseActive: valueOf('beforeReverseActive'),
+        afterForwardActive: valueOf('afterForwardActive'),
+        afterReverseActive: valueOf('afterReverseActive'),
+        unit: 'kWh',
+        scale: -2,
+        energies,
         rawData: bytesToHex(data).replace(/\s+/g, ''),
-        note: '按 6B时间 + 4×小端 BCD 能量 自适应解析'
+        note: '按645协议解析2个时间和开盖前后各6项电能'
     };
 }
 

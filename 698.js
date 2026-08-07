@@ -129,9 +129,10 @@ const OAD_CATEGORIES = {
     },
     EVENT_RECORDS: {
         "POWER_FAILURE_EVENT": { oad: "30110700", desc: "掉电事件记录", type: "octet-string", requestType: "record" },
-        "METER_COVER_EVENT": { oad: "301B0400", desc: "开表盖总次数", type: "long-unsigned", unit: "次", scale: 0 },
-        "METER_COVER_EVENT_RECORD": { oad: "301B0701", desc: "开表盖事件记录", type: "octet-string", requestType: "record" },
-        "METER_COVER_DETAIL_DATA": { oad: "301B0201", desc: "上一次开盖详细数据", type: "structure", requestType: "normal" },
+        "METER_RESET_EVENT_RECORD": { oad: "30130200", desc: "电表清零事件记录表", type: "record", requestType: "record" },
+        "METER_RESET_ASSOCIATED_OADS": { oad: "30130300", desc: "电表清零事件关联对象属性表", type: "oad[]", requestType: "normal" },
+        "METER_RESET_TIME_STATUS": { oad: "30130A00", desc: "电表清零事件时间状态记录表", type: "array", requestType: "normal" },
+        "METER_COVER_EVENT": { oad: "301B0400", desc: "开表盖事件当前记录数", type: "long-unsigned", unit: "次", scale: 0 },
         "METER_STATUS": { oad: "20140200", desc: "电表运行状态(数组)", type: "bit-string[]" },
         "METER_STATUS_WORD1": { oad: "20140201", desc: "电表运行状态字1", type: "bit-string" },
         "METER_STATUS_WORD2": { oad: "20140202", desc: "电表运行状态字2", type: "bit-string" },
@@ -826,8 +827,26 @@ function enhancedParseData(dataBuffer, oi, attributeId) {
                 consumed += (L.size + L.len);
                 break;
             }
+            case 0x51: {
+                result.dataType = "对象属性描述符";
+                if (actualData.length >= 4) {
+                    const rawOad = actualData.slice(0, 4).toString('hex').toUpperCase();
+                    const attributeByte = actualData[2];
+                    const attributeId = attributeByte & 0x1F;
+                    const feature = (attributeByte >> 5) & 0x07;
+                    result.parsedValue = {
+                        rawOad,
+                        oad: `${rawOad.slice(0, 4)}${attributeId.toString(16).padStart(2, '0')}${rawOad.slice(6)}`.toUpperCase(),
+                        oi: rawOad.slice(0, 4),
+                        attributeId,
+                        index: actualData[3],
+                        feature
+                    };
+                    consumed += 4;
+                }
+                break;
+            }
             case 0x50:
-            case 0x51:
             case 0x52:
             case 0x53:
             case 0x54:
@@ -868,7 +887,7 @@ function enhancedParseData(dataBuffer, oi, attributeId) {
             case 0x14: result.dataType = "64位长整数"; if (actualData.length >= 8) { result.parsedValue = actualData.readBigInt64BE(0).toString(); consumed += 8; } break;
             case 0x15: result.dataType = "64位无符号长整数"; if (actualData.length >= 8) { result.parsedValue = actualData.readBigUInt64BE(0).toString(); consumed += 8; } break;
             case 0x1C: result.dataType = "简化日期时间"; if (actualData.length >= 7) {
-                const y = actualData.readUInt16BE(0);
+                const y = String(actualData.readUInt16BE(0)).padStart(4, '0');
                 const m = String(actualData[2]).padStart(2, '0');
                 const d = String(actualData[3]).padStart(2, '0');
                 const h = String(actualData[4]).padStart(2, '0');
@@ -1394,446 +1413,211 @@ function parsePowerAbnormalCount(dataBuffer) {
 }
 
 /**
- * 解析开表盖总次数 - 基于实际698协议数据格式
- * @param {Buffer} dataBuffer - 数据缓冲区
- * @returns {Object} 解析结果
- */
-function parseMeterCoverEvent(dataBuffer) {
-    const result = createStandardResult("开表盖总次数", '301B0400', dataBuffer);
-
-    try {
-        // 根据实际数据帧分析，开表盖总次数是长无符号整数类型（2字节）
-        const { result: genericResult } = enhancedParseData(dataBuffer, '301B', '04');
-
-        if (genericResult.dataType === '长无符号整数') {
-            // 直接使用enhancedParseData已经正确解析的值
-            const coverCount = Number(genericResult.parsedValue);
-            result.value = coverCount;
-
-            setSuccessResult(result, [{
-                type: "开表盖总次数",
-                count: coverCount,
-                unit: "次",
-                rawValue: coverCount,
-                description: `电表开盖总次数为 ${coverCount} 次`
-            }], {
-                unit: "次",
-                scale: 0,
-                count: 1,
-                generic: genericResult
-            });
-
-        } else if (genericResult.dataType === '双长无符号整数') {
-            // 兼容4字节格式（如果某些设备使用）
-            const coverCount = Number(genericResult.parsedValue);
-            result.value = coverCount;
-
-            setSuccessResult(result, [{
-                type: "开表盖总次数",
-                count: coverCount,
-                unit: "次",
-                rawValue: coverCount,
-                description: `电表开盖总次数为 ${coverCount} 次`
-            }], {
-                unit: "次",
-                scale: 0,
-                count: 1,
-                generic: genericResult
-            });
-
-        } else if (genericResult.dataType === '数组') {
-            // 如果是数组格式，取第一个元素
-            if (genericResult.parsedValue && genericResult.parsedValue.length > 0) {
-                const firstItem = genericResult.parsedValue[0];
-                if (firstItem.dataType === '长无符号整数') {
-                    // 数组中的长无符号整数
-                    const coverCount = Number(firstItem.parsedValue);
-                    result.value = coverCount;
-
-                    setSuccessResult(result, [{
-                        type: "开表盖总次数",
-                        count: coverCount,
-                        unit: "次",
-                        rawValue: coverCount,
-                        description: `电表开盖总次数为 ${coverCount} 次`
-                    }], {
-                        unit: "次",
-                        scale: 0,
-                        count: 1,
-                        generic: genericResult
-                    });
-                } else if (firstItem.dataType === '双长无符号整数') {
-                    // 数组中的双长无符号整数
-                    const coverCount = Number(firstItem.parsedValue);
-                    result.value = coverCount;
-
-                    setSuccessResult(result, [{
-                        type: "开表盖总次数",
-                        count: coverCount,
-                        unit: "次",
-                        rawValue: coverCount,
-                        description: `电表开盖总次数为 ${coverCount} 次`
-                    }], {
-                        unit: "次",
-                        scale: 0,
-                        count: 1,
-                        generic: genericResult
-                    });
-                } else {
-                    throw new Error(`数组中的数据类型不正确: ${firstItem.dataType}`);
-                }
-            } else {
-                throw new Error("数组为空，无法解析开盖次数");
-            }
-        } else {
-            throw new Error(`开表盖总次数数据格式不正确: ${genericResult.dataType}`);
-        }
-
-    } catch (e) {
-        setErrorResult(result, e.message);
-    }
-
-    return result;
-}
-
-/**
- * 解析开表盖事件记录 - 基于实际698协议数据格式
- * @param {Buffer} dataBuffer - 数据缓冲区
- * @returns {Object} 解析结果
- */
-function parseMeterCoverEventRecord(dataBuffer) {
-    const result = createStandardResult("开表盖事件记录", '301B0701', dataBuffer);
-
-    try {
-        // 根据698协议，开表盖事件记录是octet-string类型
-        const { result: genericResult } = enhancedParseData(dataBuffer, '301B', '07');
-
-        if (genericResult.dataType === '字节串') {
-            // 直接返回原始数据，不进行假设性解析
-            result.value = {
-                rawData: genericResult.parsedValue,
-                dataLength: genericResult.parsedValue.length / 2, // 十六进制字符串长度/2 = 字节数
-                description: "开表盖事件记录原始数据"
-            };
-
-            setSuccessResult(result, [{
-                type: "开表盖事件记录",
-                rawData: genericResult.parsedValue,
-                dataLength: genericResult.parsedValue.length / 2,
-                unit: "字节",
-                description: `电表开盖事件记录原始数据，长度 ${genericResult.parsedValue.length / 2} 字节`
-            }], {
-                unit: "字节",
-                scale: 0,
-                count: 1,
-                generic: genericResult
-            });
-
-        } else if (genericResult.dataType === '数组') {
-            // 如果是数组格式，返回数组中的原始数据
-            if (genericResult.parsedValue && genericResult.parsedValue.length > 0) {
-                const rawDataArray = [];
-                for (const item of genericResult.parsedValue) {
-                    if (item.dataType === '字节串') {
-                        rawDataArray.push({
-                            rawData: item.parsedValue,
-                            dataLength: item.parsedValue.length / 2
-                        });
-                    }
-                }
-
-                result.value = {
-                    rawDataArray: rawDataArray,
-                    itemCount: rawDataArray.length,
-                    description: "开表盖事件记录数组数据"
-                };
-
-                setSuccessResult(result, [{
-                    type: "开表盖事件记录",
-                    itemCount: rawDataArray.length,
-                    rawDataArray: rawDataArray,
-                    unit: "项",
-                    description: `电表开盖事件记录数组，共 ${rawDataArray.length} 项`
-                }], {
-                    unit: "项",
-                    scale: 0,
-                    count: rawDataArray.length,
-                    generic: genericResult
-                });
-            } else {
-                throw new Error("数组为空，无法解析开盖事件记录");
-            }
-        } else if (genericResult.dataType === '结构体') {
-            // 兼容部分设备以结构体返回：收集其中的字节串项，同时保留完整结构
-            const struct = Array.isArray(genericResult.parsedValue) ? genericResult.parsedValue : [];
-            const rawDataArray = [];
-            for (let i = 0; i < struct.length; i++) {
-                const it = struct[i] || {};
-                if (it.dataType === '字节串' && typeof it.parsedValue === 'string') {
-                    rawDataArray.push({ index: i, rawData: it.parsedValue, dataLength: it.parsedValue.length / 2 });
-                }
-            }
-
-            result.value = {
-                structureData: struct,
-                elementCount: struct.length,
-                rawDataArray: rawDataArray.length ? rawDataArray : undefined,
-                itemCount: rawDataArray.length || undefined,
-                description: "开表盖事件记录结构体数据"
-            };
-
-            setSuccessResult(result, [{
-                type: "开表盖事件记录",
-                elementCount: struct.length,
-                rawDataArray: rawDataArray.length ? rawDataArray : undefined,
-                unit: rawDataArray.length ? '项' : 'element',
-                description: rawDataArray.length ? `结构体内含 ${rawDataArray.length} 段字节串` : `结构体，包含 ${struct.length} 个元素`
-            }], {
-                unit: rawDataArray.length ? '项' : undefined,
-                scale: 0,
-                count: rawDataArray.length || struct.length,
-                generic: genericResult
-            });
-        } else {
-            throw new Error(`开表盖事件记录数据格式不正确: ${genericResult.dataType}`);
-        }
-
-    } catch (e) {
-        setErrorResult(result, e.message);
-    }
-
-    return result;
-}
-
-
-/**
- * 解析上一次开盖详细数据 - 基于实际698协议数据格式
- * @param {Buffer} dataBuffer - 数据缓冲区
- * @returns {Object} 解析结果
- */
-function parseMeterCoverDetailData(dataBuffer) {
-    const result = createStandardResult("上一次开盖详细数据", '301B0201', dataBuffer);
-
-    try {
-        // 根据698协议，开盖详细数据是结构体类型
-        const { result: genericResult } = enhancedParseData(dataBuffer, '301B', '02');
-
-        if (genericResult.dataType === '结构体' && Array.isArray(genericResult.parsedValue)) {
-            // 直接返回结构体原始数据，不进行假设性解析
-            result.value = {
-                structureData: genericResult.parsedValue,
-                elementCount: genericResult.parsedValue.length,
-                description: "开盖详细数据结构体原始数据"
-            };
-
-            setSuccessResult(result, [{
-                type: "上一次开盖详细数据",
-                elementCount: genericResult.parsedValue.length,
-                structureData: genericResult.parsedValue,
-                unit: "项",
-                description: `开盖详细数据结构体，包含 ${genericResult.parsedValue.length} 个元素`
-            }], {
-                unit: "项",
-                scale: 0,
-                count: genericResult.parsedValue.length,
-                generic: genericResult
-            });
-
-        } else if (genericResult.dataType === '字节串') {
-            // 如果是字节串格式，返回原始数据
-            result.value = {
-                rawData: genericResult.parsedValue,
-                dataLength: genericResult.parsedValue.length / 2,
-                description: "开盖详细数据原始字节串"
-            };
-
-            setSuccessResult(result, [{
-                type: "上一次开盖详细数据",
-                rawData: genericResult.parsedValue,
-                dataLength: genericResult.parsedValue.length / 2,
-                unit: "字节",
-                description: `开盖详细数据原始字节串，长度 ${genericResult.parsedValue.length / 2} 字节`
-            }], {
-                unit: "字节",
-                scale: 0,
-                count: 1,
-                generic: genericResult
-            });
-
-        } else {
-            throw new Error(`上一次开盖详细数据格式不正确: ${genericResult.dataType}`);
-        }
-
-    } catch (e) {
-        setErrorResult(result, e.message);
-    }
-
-    return result;
-}
-
-/**
- * 解析 上一次开盖事件记录 (301B-02-00) 的简化明细
- * 提取：事件序号、发生时间、结束时间；其余字段保留原始十六进制片段
+ * 解析上一次开盖事件记录（301B-02-00）。
+ * 按RCSD中的OAD及属性特征，区分事件发生前和事件结束后的电能数据。
  */
 function parseLastOpenCoverRecord(payload) {
     const result = createStandardResult("上一次开盖事件记录", '301B0200', payload);
     try {
-        const buf = Buffer.from(payload);
-
-        // 尝试解析前置 RCSD 列描述块：N(1B) + N*(type(1)=0x00 + OAD(4B))
-        let offset = 0;
-        const columns = [];
-        if (buf.length >= 6) {
-            const n = buf[offset];
-            let ok = true;
-            let off = offset + 1;
-            for (let i = 0; i < n; i++) {
-                if (off + 5 > buf.length) { ok = false; break; }
-                const csdType = buf[off++];
-                const oiHi = buf[off++], oiLo = buf[off++];
-                const att = buf[off++], idx = buf[off++];
-                if (csdType !== 0x00) { ok = false; break; }
-                const oadHex = `${oiHi.toString(16).padStart(2, '0')}${oiLo.toString(16).padStart(2, '0')}${att.toString(16).padStart(2, '0')}${idx.toString(16).padStart(2, '0')}`.toUpperCase();
-                columns.push(oadHex);
-            }
-            if (ok && columns.length === n) {
-                offset = off;
-            } else {
-                // 无法识别RCSD，降级为全文扫描
-                columns.length = 0;
-                offset = 0;
-            }
-        }
-
-        // 如果识别出列，则按 A-ResultRecord: choice(1) + seqOf(1) + 按列逐项的 A-XDR 值 解析第一行
-        let parsed = { sequence: null, startTime: null, endTime: null, extras: {} };
-        if (columns.length > 0 && offset + 2 <= buf.length) {
-            const choice = buf[offset++];
-            if (choice === 0) {
-                const dar = buf[offset] ?? 0xFF;
-                throw new Error(`记录读取失败 DAR=0x${dar.toString(16)}`);
-            }
-            const rows = buf[offset++];
-            // 仅取第一行
-            const values = {};
-            let off = offset;
-            function parseValue(b) {
-                const tag = b[0];
-                switch (tag) {
-                    case 0x06: // double-long-unsigned (4)
-                        if (b.length < 5) return { consumed: 1, value: null };
-                        return { consumed: 5, value: b.readUInt32BE(1) };
-                    case 0x12: // long-unsigned (2)
-                        if (b.length < 3) return { consumed: 1, value: null };
-                        return { consumed: 3, value: b.readUInt16BE(1) };
-                    case 0x11: // unsigned (1)
-                        if (b.length < 2) return { consumed: 1, value: null };
-                        return { consumed: 2, value: b[1] };
-                    case 0x1C: // date-time-s (7)
-                        if (b.length < 8) return { consumed: 1, value: null };
-                        const y = b.readUInt16BE(1), m = b[3], d = b[4], h = b[5], mi = b[6], s = b[7];
-                        const iso = `${y.toString().padStart(4, '0')}-${String(m).padStart(2, '0')}-${String(d).padStart(2, '0')} ${String(h).padStart(2, '0')}:${String(mi).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
-                        return { consumed: 8, value: iso };
-                    case 0x09: { // byte-string (len=AXDR)
-                        if (b.length < 2) return { consumed: 1, value: null };
-                        const L = readAxdrLength(b, 1);
-                        const start = 1 + L.size, end = start + L.len;
-                        if (end > b.length) return { consumed: b.length, value: null };
-                        return { consumed: end, value: b.slice(start, end).toString('hex').toUpperCase() };
-                    }
-                    default:
-                        // 不识别则原样透传十六进制，按最小 1 字节消费避免死循环
-                        return { consumed: 1, value: null };
-                }
-            }
-            for (let ci = 0; ci < columns.length; ci++) {
-                if (off >= buf.length) break;
-                const { consumed, value } = parseValue(buf.slice(off));
-                values[columns[ci]] = value;
-                off += consumed;
-            }
-            // 映射常用列
-            parsed.sequence = (values['20220200'] ?? values['20220000'] ?? null);
-            parsed.startTime = values['201E0200'] ?? null;
-            parsed.endTime = values['20200200'] ?? null;
-            parsed.extras = values;
-        }
-
-        // 若前置块无法解析，则降级：全文扫描两处时间与序号
-        if (!parsed.startTime || !parsed.endTime) {
-            const times = [];
-            for (let i = 0; i + 8 <= buf.length; i++) {
-                if (buf[i] === 0x1C) {
-                    const t = buf.slice(i + 1, i + 8);
-                    const year = (t[0] << 8) | t[1];
-                    const mon = t[2], day = t[3], hh = t[4], mm = t[5], ss = t[6];
-                    const iso = `${year.toString().padStart(4, '0')}-${String(mon).padStart(2, '0')}-${String(day).padStart(2, '0')} ${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).toString().padStart(2, '0')}`;
-                    times.push({ index: i, iso });
-                    if (times.length >= 2) break;
-                }
-            }
-            // 尝试在第一次时间前寻找 0x06 + 4B 作为事件序号
-            if (times.length >= 1 && parsed.sequence == null) {
-                for (let j = Math.max(0, times[0].index - 12); j + 5 <= buf.length && j < times[0].index; j++) {
-                    if (buf[j] === 0x06 && (j + 5) <= times[0].index) { parsed.sequence = buf.readUInt32BE(j + 1); break; }
-                }
-            }
-            if (!parsed.startTime && times[0]) parsed.startTime = times[0].iso;
-            if (!parsed.endTime && times[1]) parsed.endTime = times[1].iso;
-        }
-
-        // 提取能量项：开盖前/后 正向/反向有功总电能（按现场记录列映射）
-        // 约定：
-        //  - 开盖"前"：OAD 00102201 (正向), 00202201 (反向)
-        //  - 开盖"后"：OAD 00108201 (正向), 00208201 (反向)
-        // 兼容部分设备 index 可能为 00：同样尝试 00102200/00202200/00108200/00208200
-        const pick = (k) => (parsed.extras && Object.prototype.hasOwnProperty.call(parsed.extras, k)) ? parsed.extras[k] : undefined;
-        // 兼容主/备列：0010/0020 为主，0050/0060 为补充列（部分设备写在 05 索引）
-        const beforeFwdRaw = pick('00102201') ?? pick('00102200');
-        const beforeRevRaw = pick('00202201') ?? pick('00202200') ?? pick('00702201');
-        const afterFwdRaw = pick('00108201') ?? pick('00108200') ?? pick('00502201');
-        const afterRevRaw = pick('00208201') ?? pick('00208200') ?? pick('00602201') ?? pick('00802201');
-
-        // DL/T 698 电能量刻度：正/反向有功总电能按 0.01kWh（scale -2）
-        const scaleEnergy = -2;
-        const div = 100;
-        const toNum = (v) => {
-            const n = (typeof v === 'number') ? v
-                : (typeof v === 'bigint') ? Number(v)
-                    : (typeof v === 'string' && /^\d+$/.test(v)) ? parseInt(v, 10)
-                        : null;
-            // 过滤明显的无效占位（0xFFFFFFFF 等）
-            if (n === null) return null;
-            if (n === 0xFFFFFFFF || n === 0xFFFFFF || n === 0xFFFF) return null;
-            return n;
+        const { count, row } = parseSelectedRecordRow(payload);
+        const findValue = (oi, feature = 0) => row.find(cell => cell.oi === oi && cell.feature === feature)?.value ?? null;
+        const energyInfo = {
+            '0010': ['ForwardActive', '正向有功总电能', 'kWh'],
+            '0020': ['ReverseActive', '反向有功总电能', 'kWh'],
+            '0050': ['ReactiveQ1', '第一象限无功总电能', 'kvarh'],
+            '0060': ['ReactiveQ2', '第二象限无功总电能', 'kvarh'],
+            '0070': ['ReactiveQ3', '第三象限无功总电能', 'kvarh'],
+            '0080': ['ReactiveQ4', '第四象限无功总电能', 'kvarh']
         };
-        const beforeFwd = toNum(beforeFwdRaw);
-        const beforeRev = toNum(beforeRevRaw);
-        const afterFwd = toNum(afterFwdRaw);
-        const afterRev = toNum(afterRevRaw);
+        const energies = row.filter(cell => energyInfo[cell.oi] && (cell.feature === 1 || cell.feature === 4)).map(cell => {
+            const [key, label, unit] = energyInfo[cell.oi];
+            const prefix = cell.feature === 1 ? 'before' : 'after';
+            const valid = Number.isFinite(cell.rawValue) && cell.rawValue !== 0xFFFFFFFF;
+            return {
+                key: `${prefix}${key}`,
+                label: `开盖${cell.feature === 1 ? '前' : '后'}${label}`,
+                value: valid ? cell.rawValue / 100 : null,
+                unit,
+                scale: -2,
+                valid,
+                rawData: cell.rawData
+            };
+        });
+        const energyValue = key => energies.find(item => item.key === key)?.value ?? null;
+        const sequence = findValue('2022');
+        const startTime = findValue('201E');
+        const endTime = findValue('2020');
+        const beforeForwardActive = energyValue('beforeForwardActive');
+        const beforeReverseActive = energyValue('beforeReverseActive');
+        const afterForwardActive = energyValue('afterForwardActive');
+        const afterReverseActive = energyValue('afterReverseActive');
 
-        // 输出
         result.value = {
-            sequence: parsed.sequence ?? null,
-            startTime: parsed.startTime ?? null,
-            endTime: parsed.endTime ?? null,
-            beforeForwardActive: (beforeFwd != null) ? beforeFwd / div : null,
-            beforeReverseActive: (beforeRev != null) ? beforeRev / div : null,
-            afterForwardActive: (afterFwd != null) ? afterFwd / div : null,
-            afterReverseActive: (afterRev != null) ? afterRev / div : null,
+            type: 'cover_open_record',
+            ok: count > 0,
+            sequence,
+            startTime,
+            endTime,
+            beforeForwardActive,
+            beforeReverseActive,
+            afterForwardActive,
+            afterReverseActive,
             unit: 'kWh',
-            scale: scaleEnergy,
-            extras: parsed.extras
+            scale: -2,
+            energies,
+            rawData: Buffer.from(payload).toString('hex').toUpperCase()
         };
-        const detail = [];
-        if (parsed.sequence != null) detail.push({ label: '事件序号', value: parsed.sequence });
-        if (parsed.startTime) detail.push({ label: '发生时间', value: parsed.startTime });
-        if (parsed.endTime) detail.push({ label: '结束时间', value: parsed.endTime });
-        if (beforeFwd != null) detail.push({ label: '开盖前正向有功总电能', value: (beforeFwd / div).toFixed(Math.abs(scaleEnergy)), unit: 'kWh', rawValue: beforeFwd });
-        if (beforeRev != null) detail.push({ label: '开盖前反向有功总电能', value: (beforeRev / div).toFixed(Math.abs(scaleEnergy)), unit: 'kWh', rawValue: beforeRev });
-        if (afterFwd != null) detail.push({ label: '开盖后正向有功总电能', value: (afterFwd / div).toFixed(Math.abs(scaleEnergy)), unit: 'kWh', rawValue: afterFwd });
-        if (afterRev != null) detail.push({ label: '开盖后反向有功总电能', value: (afterRev / div).toFixed(Math.abs(scaleEnergy)), unit: 'kWh', rawValue: afterRev });
-        setSuccessResult(result, detail.length ? detail : [{ raw: buf.toString('hex').toUpperCase() }], { unit: 'kWh', scale: scaleEnergy, count: detail.length });
+        setSuccessResult(result, result.value, { unit: 'kWh', scale: -2, count });
+    } catch (e) {
+        setErrorResult(result, e.message);
+    }
+    return result;
+}
+
+const EVENT_ASSOCIATION_FEATURES = {
+    0: '未指定',
+    1: '事件发生前',
+    2: '事件发生后',
+    3: '事件结束前',
+    4: '事件结束后'
+};
+
+function describeEventOad(rawOad) {
+    const hex = String(rawOad || '').toUpperCase();
+    if (!/^[0-9A-F]{8}$/.test(hex)) return null;
+    const attributeByte = parseInt(hex.slice(4, 6), 16);
+    const attributeId = attributeByte & 0x1F;
+    const feature = (attributeByte >> 5) & 0x07;
+    const oad = `${hex.slice(0, 4)}${attributeId.toString(16).padStart(2, '0')}${hex.slice(6)}`.toUpperCase();
+    const info = getOADInfo(oad) || getOADInfo(`${oad.slice(0, 6)}00`);
+    return {
+        rawOad: hex,
+        oad,
+        oi: hex.slice(0, 4),
+        attributeId,
+        index: parseInt(hex.slice(6, 8), 16),
+        feature,
+        featureName: EVENT_ASSOCIATION_FEATURES[feature] || `未知(${feature})`,
+        name: info?.desc || '未知对象属性',
+        unit: info?.unit || null,
+        scale: info?.scale ?? 0
+    };
+}
+
+/** 解析30130300：清零事件记录中关联数据的OAD及采集时点。 */
+function parseMeterResetAssociatedOads(dataBuffer) {
+    const result = createStandardResult('电表清零事件关联对象属性表', '30130300', dataBuffer);
+    try {
+        const { result: generic } = enhancedParseData(dataBuffer, '3013', '03');
+        if (generic.dataType !== '数组' || !Array.isArray(generic.parsedValue)) {
+            throw new Error(`关联对象属性表应为数组，实际为${generic.dataType}`);
+        }
+
+        const items = generic.parsedValue.map(item => {
+            const rawOad = item?.parsedValue?.rawOad;
+            return describeEventOad(rawOad);
+        }).filter(Boolean);
+
+        result.value = items;
+        setSuccessResult(result, items, { count: items.length, generic });
+    } catch (e) {
+        setErrorResult(result, e.message);
+    }
+    return result;
+}
+
+/** 解析Selector9选中的单条记录。 */
+function parseSelectedRecordRow(dataBuffer) {
+    const buffer = Buffer.from(dataBuffer);
+    let offset = 0;
+    const columns = [];
+
+    const columnCount = readAxdrLength(buffer, offset);
+    offset += columnCount.size;
+    for (let i = 0; i < columnCount.len; i++) {
+        if (offset + 5 > buffer.length) throw new Error('RCSD列描述长度不足');
+        const csdType = buffer[offset++];
+        if (csdType !== 0x00) throw new Error(`暂不支持CSD类型0x${csdType.toString(16).toUpperCase()}`);
+        const rawOad = buffer.slice(offset, offset + 4).toString('hex').toUpperCase();
+        offset += 4;
+        columns.push(describeEventOad(rawOad));
+    }
+
+    if (offset >= buffer.length) throw new Error('缺少A-ResultRecord');
+    const choice = buffer[offset++];
+    if (choice === 0) {
+        const dar = buffer[offset] ?? 0xFF;
+        throw new Error(`记录读取失败 DAR=0x${dar.toString(16).toUpperCase().padStart(2, '0')}`);
+    }
+    if (choice !== 1) throw new Error(`不支持的A-ResultRecord类型: ${choice}`);
+
+    const rowCount = readAxdrLength(buffer, offset);
+    offset += rowCount.size;
+    if (rowCount.len === 0) return { count: 0, row: [] };
+
+    const row = columns.map(column => {
+        const { result: parsed, consumed } = enhancedParseData(buffer.slice(offset), column.oi, column.attributeId.toString(16));
+        if (!consumed) throw new Error('记录列解析未消费数据');
+        offset += consumed;
+        const rawValue = parsed.parsedValue;
+        const value = typeof rawValue === 'number' && column.scale
+            ? rawValue * Math.pow(10, column.scale)
+            : rawValue;
+        return { ...column, rawValue, value, rawData: parsed.rawData };
+    });
+    return { count: rowCount.len, row };
+}
+
+const METER_RESET_ENERGY_INFO = Object.fromEntries([
+    ['total', '', '总', '0'],
+    ['phaseA', 'A相', '', '1'],
+    ['phaseB', 'B相', '', '2'],
+    ['phaseC', 'C相', '', '3']
+].flatMap(([prefix, phase, total, phaseCode]) => [
+    [`${prefix}ForwardActive`, `清零前${phase}正向有功${total}电能`, 'kWh', `001${phaseCode}`],
+    [`${prefix}ReverseActive`, `清零前${phase}反向有功${total}电能`, 'kWh', `002${phaseCode}`],
+    [`${prefix}ReactiveQ1`, `清零前${phase}第一象限无功${total}电能`, 'kvarh', `005${phaseCode}`],
+    [`${prefix}ReactiveQ2`, `清零前${phase}第二象限无功${total}电能`, 'kvarh', `006${phaseCode}`],
+    [`${prefix}ReactiveQ3`, `清零前${phase}第三象限无功${total}电能`, 'kvarh', `007${phaseCode}`],
+    [`${prefix}ReactiveQ4`, `清零前${phase}第四象限无功${total}电能`, 'kvarh', `008${phaseCode}`]
+]).map(([key, label, unit, oi]) => [oi, { key, label, unit }]));
+
+/** 解析30130200：最近电表清零事件记录及其关联数据。 */
+function parseMeterResetEventRecord(dataBuffer) {
+    const result = createStandardResult('电表清零事件记录', '30130200', dataBuffer);
+    try {
+        const { count, row } = parseSelectedRecordRow(dataBuffer);
+        const eventTime = row.find(cell => cell.oi === '201E')?.value ?? null;
+        const eventTimeRaw = eventTime ? eventTime.replace(/\D/g, '') : '';
+        const hasRecord = count > 0 && !!eventTimeRaw && !/^0{14}$/.test(eventTimeRaw);
+
+        // energies按电表实际返回的事件关联列生成，不强制补齐为645的24项。
+        const energies = row.filter(cell => cell.feature > 0).map(cell => {
+            const info = METER_RESET_ENERGY_INFO[cell.oi];
+            const valid = Number.isFinite(cell.rawValue) && cell.rawValue !== 0xFFFFFFFF;
+            return {
+                key: info?.key || cell.oad,
+                label: info?.label || cell.name,
+                value: valid ? (info ? cell.rawValue / 100 : cell.value) : null,
+                unit: info?.unit || cell.unit,
+                scale: info ? -2 : cell.scale,
+                valid,
+                rawData: cell.rawData
+            };
+        });
+
+        const rawData = Buffer.from(dataBuffer).toString('hex').toUpperCase();
+        result.value = {
+            type: 'meter_reset_record',
+            ok: true,
+            hasRecord,
+            recordIndex: 1,
+            eventTime,
+            eventTimeRaw,
+            energies,
+            rawData
+        };
+        setSuccessResult(result, result.value, { count, rawData });
     } catch (e) {
         setErrorResult(result, e.message);
     }
@@ -2422,9 +2206,9 @@ function oadParserRouter(payload, oad) {
     if (['2004', '2005'].includes(prefix)) return parseInstantPowerData(payload, oad);
     // 30110700：掉电事件-当前记录数（对齐C#侧逻辑，读取当前记录条数）
     if (oad === '30110700') return parsePowerFailureEventCount(payload);
-    if (oad === '301B0400') return parseMeterCoverEvent(payload); // 开表盖总次数
-    if (oad === '301B0701') return parseMeterCoverEventRecord(payload); // 开表盖事件记录
-    if (oad === '301B0201') return parseMeterCoverDetailData(payload); // 上一次开盖详细数据
+    if (oad === '30130300') return parseMeterResetAssociatedOads(payload); // 电表清零事件关联对象属性表
+    if (oad === '30130200') return parseMeterResetEventRecord(payload); // 电表清零事件最近记录
+    if (oad === '301B0400') return parseEventRecordCount(payload, oad, '开表盖事件'); // 当前记录数
     if (oad === '301B0200') return parseLastOpenCoverRecord(payload);   // 上一次开盖事件记录（RecordRow）
     if (oad === '302C0701') return parsePowerAbnormalCount(payload); // 电源异常事件总次数
     if (oad === '302B0400') return parseEventRecordCount(payload, oad, '负荷开关误动作事件');
@@ -2545,24 +2329,25 @@ function parseGetResponse(apduBuffer, result) {
     result.unifiedFormat.oad = oad;
     result.unifiedFormat.objectInfo = getOADInfo(oad) || { desc: "未知对象" };
 
-    const choiceOutcome = consumeGetResultChoice(apduBuffer, offset);
-    if (choiceOutcome.explicitChoice !== null) {
-        result.unifiedFormat.dataChoice = choiceOutcome.explicitChoice;
-    }
-    if (choiceOutcome.status === "failed") {
-        result.unifiedFormat.status = "失败";
-        result.unifiedFormat.error = getDarDescription(choiceOutcome.dar);
-        return;
-    }
-
-    const dataBuffer = apduBuffer.slice(choiceOutcome.dataOffset);
-    result.unifiedFormat.status = "成功";
-
     if (responseType === 1) {
+        const choiceOutcome = consumeGetResultChoice(apduBuffer, offset);
+        if (choiceOutcome.explicitChoice !== null) {
+            result.unifiedFormat.dataChoice = choiceOutcome.explicitChoice;
+        }
+        if (choiceOutcome.status === "failed") {
+            result.unifiedFormat.status = "失败";
+            result.unifiedFormat.error = getDarDescription(choiceOutcome.dar);
+            return;
+        }
+        const dataBuffer = apduBuffer.slice(choiceOutcome.dataOffset);
+        result.unifiedFormat.status = "成功";
         result.unifiedFormat.data = oadParserRouter(dataBuffer, oad);
         return;
     }
 
+    // GET-Response-Record在OAD后直接跟RCSD和A-ResultRecord，没有普通GET的GetResult选择字节。
+    const dataBuffer = apduBuffer.slice(offset);
+    result.unifiedFormat.status = "成功";
     result.unifiedFormat.type = "GET-Response-Record";
 
     // 针对日/结算日冻结 OAD（50040200/50050200）做特殊解析，设备返回为记录型自定义结构
@@ -2574,6 +2359,10 @@ function parseGetResponse(apduBuffer, result) {
     // Record 类型优先走专用解析（开盖事件等），否则兜底通用解析
     if (oad === '301B0200') { // 上一次开盖事件记录
         result.unifiedFormat.data = parseLastOpenCoverRecord(dataBuffer);
+        return;
+    }
+    if (oad === '30130200') { // 上一次电表清零事件记录
+        result.unifiedFormat.data = parseMeterResetEventRecord(dataBuffer);
         return;
     }
 
