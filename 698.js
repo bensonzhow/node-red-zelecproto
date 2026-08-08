@@ -1399,42 +1399,6 @@ function parseEventOccurrenceStatistics(dataBuffer, oad, eventName) {
 }
 
 /**
- * 解析 电源异常事件总次数 (302C0701)
- * 兼容多厂商格式：可能返回结构体/数组嵌套的一个或多个无符号长整数。
- * value: 返回总次数（若存在多个数值则求和），data: 列出拆解项
- */
-function parsePowerAbnormalCount(dataBuffer) {
-    const oad = '302C0701';
-    const result = createStandardResult("电源异常事件总次数", oad, dataBuffer);
-    try {
-        const { result: generic } = enhancedParseData(dataBuffer, '302C', '07');
-
-        const nums = [];
-        function collect(nitem, depth = 0) {
-            if (!nitem || depth > 8) return;
-            if (typeof nitem === 'number') { nums.push(nitem); return; }
-            if (Array.isArray(nitem)) { for (const it of nitem) collect(it, depth + 1); return; }
-            if (typeof nitem === 'object') {
-                if (typeof nitem.parsedValue === 'number') nums.push(nitem.parsedValue);
-                collect(nitem.parsedValue, depth + 1);
-                if (nitem.value && nitem.value !== nitem.parsedValue) collect(nitem.value, depth + 1);
-                if (nitem.data && nitem.data !== nitem.parsedValue && nitem.data !== nitem.value) collect(nitem.data, depth + 1);
-            }
-        }
-        collect(generic);
-
-        // 明确两项：总次数 与 清零/复位次数（若存在）
-        const total = (nums.length >= 1) ? nums[0] : null;
-        const reset = (nums.length >= 2) ? nums[1] : null;
-
-        // 为兼容旧用法：把 value 结构化，但“count”默认取 total
-        result.value = { total, reset, parts: nums };
-        setSuccessResult(result, [{ type: '电源异常事件总次数', total, reset, parts: nums }], { count: nums.length, generic });
-    } catch (e) { setErrorResult(result, e.message); }
-    return result;
-}
-
-/**
  * 解析上一次开盖事件记录（301B-02-00）。
  * 按RCSD中的OAD及属性特征，区分事件发生前和事件结束后的电能数据。
  */
@@ -2282,7 +2246,7 @@ function oadParserRouter(payload, oad) {
     if (oad === '301B0400') return parseEventRecordCount(payload, oad, '开表盖事件'); // 当前记录数
     if (oad === '301B0200') return parseLastOpenCoverRecord(payload);   // 上一次开盖事件记录（RecordRow）
     if (LAST_STANDARD_EVENT_RECORDS[oad]) return parseLastStandardEventRecord(payload, oad, LAST_STANDARD_EVENT_RECORDS[oad]);
-    if (oad === '302C0701') return parsePowerAbnormalCount(payload); // 电源异常事件总次数
+    if (oad === '302C0701') return parseEventOccurrenceStatistics(payload, oad, '电源异常事件');
     if (oad === '302B0400') return parseEventRecordCount(payload, oad, '负荷开关误动作事件');
     if (oad === '302B0701') return parseEventOccurrenceStatistics(payload, oad, '负荷开关误动作事件');
     if (oad === '302F0400') return parseEventRecordCount(payload, oad, '计量芯片故障事件');
