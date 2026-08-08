@@ -779,7 +779,7 @@ function decode645(_msg) {
             };
         } else if (di === '03300D01' && arrPush.length >= 16) {
             value = parseCoverOpenLast645(arrPush);
-        } else if (di === '03360001' || di === '03370001') {
+        } else if (di === '03110001' || di === '03360001' || di === '03370001') {
             value = parseLast645StandardEventRecord(arrPush, di);
         } else {
             value = parseGeneric645Data(di, arrPush);
@@ -1094,6 +1094,11 @@ function parseCoverOpenLast645(arrPush) {
 }
 
 const LAST_645_EVENT_RECORDS = {
+    '03110001': {
+        eventName: '掉电事件',
+        hasState: false,
+        energies: []
+    },
     '03360001': {
         eventName: '负荷开关误动作事件',
         hasState: true,

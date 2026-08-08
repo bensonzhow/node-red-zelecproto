@@ -131,6 +131,7 @@ const OAD_CATEGORIES = {
         "POWER_FAILURE_EVENT": { oad: "30110700", desc: "掉电事件记录", type: "octet-string", requestType: "record" },
         "METER_RESET_EVENT_RECORD": { oad: "30130200", desc: "电表清零事件记录表", type: "record", requestType: "record" },
         "METER_RESET_ASSOCIATED_OADS": { oad: "30130300", desc: "电表清零事件关联对象属性表", type: "oad[]", requestType: "normal" },
+        "METER_RESET_EVENT_COUNT": { oad: "30130400", desc: "电表清零事件当前记录数", type: "long-unsigned", requestType: "normal" },
         "METER_RESET_TIME_STATUS": { oad: "30130A00", desc: "电表清零事件时间状态记录表", type: "array", requestType: "normal" },
         "METER_COVER_EVENT": { oad: "301B0400", desc: "开表盖事件当前记录数", type: "long-unsigned", unit: "次", scale: 0 },
         "METER_STATUS": { oad: "20140200", desc: "电表运行状态(数组)", type: "bit-string[]" },
@@ -1496,6 +1497,7 @@ function parseLastOpenCoverRecord(payload) {
 }
 
 const LAST_STANDARD_EVENT_RECORDS = {
+    '30110200': '掉电事件',
     '302B0200': '负荷开关误动作事件',
     '302C0200': '电源异常事件',
     '302F0200': '计量芯片故障事件'
@@ -2276,6 +2278,7 @@ function oadParserRouter(payload, oad) {
     if (oad === '30110700') return parsePowerFailureEventCount(payload);
     if (oad === '30130300') return parseMeterResetAssociatedOads(payload); // 电表清零事件关联对象属性表
     if (oad === '30130200') return parseMeterResetEventRecord(payload); // 电表清零事件最近记录
+    if (oad === '30130400') return parseEventRecordCount(payload, oad, '电表清零事件'); // 当前记录数
     if (oad === '301B0400') return parseEventRecordCount(payload, oad, '开表盖事件'); // 当前记录数
     if (oad === '301B0200') return parseLastOpenCoverRecord(payload);   // 上一次开盖事件记录（RecordRow）
     if (LAST_STANDARD_EVENT_RECORDS[oad]) return parseLastStandardEventRecord(payload, oad, LAST_STANDARD_EVENT_RECORDS[oad]);
