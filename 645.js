@@ -38,7 +38,11 @@ function build645Frame(i, reverseAddr, csMode) {
     const dataBytes = hexToBytes(cmdEx.replace(/\s+/g, ''));
 
     // 帧体：68 A0..A5 68 C L DATA CS 16
-    const C = 0x11;            // 读命令
+    // 仅自定义参数路径允许覆盖控制码，现有命令仍固定使用0x11。
+    const customControl = i.payload && i.payload.customParameter
+        ? i.payload.customParameter.controlCode
+        : null;
+    const C = customControl == null ? 0x11 : normalize645Byte(customControl, '控制码');
     const L = 0x04;            // 数据长度
     const frameNoCS = [0x68, ...addrBytes, 0x68, C, L, ...dataBytes];
     const cs = calc645CSForBytes(frameNoCS, csMode);
@@ -824,6 +828,14 @@ function encryptOAD(oadStr) {
     for (let i = 0; i < 8; i += 2) bytes.push(parseInt(clean.slice(i, i + 2), 16));
     const entagd = bytes.reverse().map(b => (b + 0x33) & 0xFF);
     return entagd.map(b => b.toString(16).toUpperCase().padStart(2, '0')).join(' ');
+}
+
+function normalize645Byte(value, name) {
+    const parsed = typeof value === 'string' ? parseInt(value, 16) : Number(value);
+    if (!Number.isInteger(parsed) || parsed < 0 || parsed > 0xFF) {
+        throw new Error(`${name}必须是1字节整数`);
+    }
+    return parsed;
 }
 
 function decryptOAD(entagdStr) {

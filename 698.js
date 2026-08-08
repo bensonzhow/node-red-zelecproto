@@ -495,12 +495,15 @@ function getOADInfo(fullOAD) {
         const serviceResolved = (params.service || service || 'get').toLowerCase();
         const securityResolved = (params.security != null ? params.security : security);
         const rnResolved = (params.rnHex != null ? params.rnHex : rn);
-        if (serviceResolved === 'get') apdu = NR698_buildGetRequestApdu({ type, piid, oad, oadList: params.oadList, rsd, rcsd });
+        const rawApduHex = params.apduHex || params.customParameter?.apduHex;
+        if (rawApduHex) apdu = NR698_fromHexLoose(rawApduHex);
+        else if (serviceResolved === 'get') apdu = NR698_buildGetRequestApdu({ type, piid, oad, oadList: params.oadList, rsd, rcsd });
         else if (serviceResolved === 'action') apdu = NR698_buildActionRequestApdu({ piid, oad, dataHex: params.dataHex });
         else if (serviceResolved === 'connect') apdu = NR698_buildConnectRequestApdu({ ...params, piid });
         else if (serviceResolved === 'security') apdu = NR698_buildSecurityRequestApdu(params);
         else throw new Error('Unsupported service: ' + serviceResolved);
-        apdu = NR698_wrapSecurity(apdu, securityResolved, rnResolved);
+        // 完整APDU中可能已包含安全封装，必须原样入帧，不再二次包装。
+        if (!rawApduHex) apdu = NR698_wrapSecurity(apdu, securityResolved, rnResolved);
         const body = []; body.push(0x00, 0x00); body.push(ctrl & 0xFF); body.push(saFlag & 0xFF); for (const b of saBufFwd) body.push(b); body.push(ca & 0xFF); const hcsIndex = body.length; body.push(0x00, 0x00); for (const b of apdu) body.push(b);
         const indexBeforeFCS = body.length; const lengthVal = (indexBeforeFCS + 2) & 0x3FFF; body[0] = lengthVal & 0xFF; body[1] = (lengthVal >>> 8) & 0xFF;
         const hcs = NR698_tryfcs16(Uint8Array.from(body.slice(0, hcsIndex))); const [hcsLo, hcsHi] = NR698_u16le(hcs); body[hcsIndex] = hcsLo; body[hcsIndex + 1] = hcsHi;
@@ -510,6 +513,20 @@ function getOADInfo(fullOAD) {
     }
     function NR698_prepareParams(p) {
         const params = p || {};
+        if (params.customParameter && typeof params.customParameter === 'object') {
+            if (!params.apduHex && params.customParameter.apduHex) params.apduHex = params.customParameter.apduHex;
+            if (params.ctrl == null && params.customParameter.controlCode != null) {
+                const control = params.customParameter.controlCode;
+                params.ctrl = typeof control === 'string' ? parseInt(control, 16) : Number(control);
+            }
+        }
+        if (params.apduHex != null) {
+            const apduHex = String(params.apduHex).replace(/\s+/g, '').toUpperCase();
+            if (!apduHex || !/^[0-9A-F]+$/.test(apduHex) || apduHex.length % 2 !== 0) {
+                throw new Error('apduHex must be complete hexadecimal bytes');
+            }
+            params.apduHex = apduHex;
+        }
         let autoEsamList = false;
         if (typeof params.oadHex === 'string' && params.oadHex.toUpperCase() === ESAMINFO_ALIAS.key) {
             params.oadHex = ESAMINFO_ALIAS.oadHex;
@@ -553,7 +570,7 @@ function getOADInfo(fullOAD) {
         }
         if (params.ca == null) params.ca = 0x11;
         if (params.prependFE == null) params.prependFE = true;
-        if (serviceLower === 'get' && !params.oad && !(params.oadList && params.oadList.length)) { params.oad = { oi: 0x4001, att: 0x02, index: 0x00 }; }
+        if (!params.apduHex && serviceLower === 'get' && !params.oad && !(params.oadList && params.oadList.length)) { params.oad = { oi: 0x4001, att: 0x02, index: 0x00 }; }
         if (params._rcsd_oad_hex && (!params.rcsd || !Array.isArray(params.rcsd.csds))) { const o = NR698_parseOADHex(params._rcsd_oad_hex); params.type = 'record'; params.rsd = params.rsd || { choice: 9, n: (params._rsd_n > 0 ? params._rsd_n : 1) }; params.rcsd = { csds: [{ type: 'oad', oi: o.oi, att: o.att, index: o.index }] }; }
         if (params.rcsd && Array.isArray(params.rcsd.csds)) { params.rcsd.csds = params.rcsd.csds.map(c => { if (typeof c === 'string') { const o = NR698_parseOADHex(c); return { type: 'oad', oi: o.oi, att: o.att, index: o.index }; } else if (c && typeof c === 'object') { if (!c.type && c.oi != null) return { type: 'oad', oi: c.oi, att: c.att || 0, index: c.index || 0 }; return c; } throw new Error('Invalid RCSD CSD item'); }); }
         let primaryOad = params.oad;
@@ -563,7 +580,8 @@ function getOADInfo(fullOAD) {
         }
         const oadKey = params.oadHex ? params.oadHex.toUpperCase() :
             (primaryOad ? (((primaryOad.oi << 16) | (primaryOad.att << 8) | primaryOad.index).toString(16).padStart(8, '0')) : null);
-        if (params.security == null || params.security === 'auto') {
+        if (params.apduHex) params.security = 'none';
+        else if (params.security == null || params.security === 'auto') {
             if (oadKey && NR698_OAD_NO_SECURITY.has(oadKey)) params.security = 'none';
             else if (serviceLower === 'get') params.security = 'plain_rn';
             else params.security = 'none';
