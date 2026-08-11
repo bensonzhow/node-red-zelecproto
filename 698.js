@@ -773,27 +773,101 @@ function detectAndValidateFrame(buffer) {
 }
 
 // 递归解析：数组/结构体/常见类型 + A-XDR 长长度
-function parseArray(data, oi, attr) {
-    const count = data[0];
-    let offset = 1, items = [];
-    for (let i = 0; i < count; i++) {
-        if (offset >= data.length) break;
+function ensureAxdrBytes(buffer, offset, length, label) {
+    if (offset + length > buffer.length) throw new Error(`${label}长度不足`);
+}
+
+function parseAxdrSequence(data, oi, attr, label) {
+    const countInfo = readAxdrLength(data, 0);
+    let offset = countInfo.size;
+    const items = [];
+    for (let i = 0; i < countInfo.len; i++) {
         const { result, consumed } = enhancedParseData(data.slice(offset), oi, attr);
+        if (result.error || consumed <= 0) throw new Error(`${label}第${i + 1}项${result.error || '未消费数据'}`);
         items.push(result);
         offset += consumed;
     }
     return { parsedValue: items, consumed: offset };
 }
+
+function parseArray(data, oi, attr) {
+    return parseAxdrSequence(data, oi, attr, '数组');
+}
+
 function parseStructure(data, oi, attr) {
-    const count = data[0];
-    let offset = 1, items = [];
-    for (let i = 0; i < count; i++) {
-        if (offset >= data.length) break;
-        const { result, consumed } = enhancedParseData(data.slice(offset), oi, attr);
-        items.push(result);
-        offset += consumed;
+    return parseAxdrSequence(data, oi, attr, '结构体');
+}
+
+function parseOadBytes(buffer, offset = 0) {
+    ensureAxdrBytes(buffer, offset, 4, 'OAD');
+    const rawOad = buffer.slice(offset, offset + 4).toString('hex').toUpperCase();
+    const attributeByte = buffer[offset + 2];
+    const attributeId = attributeByte & 0x1F;
+    const feature = (attributeByte >> 5) & 0x07;
+    return {
+        rawOad,
+        oad: `${rawOad.slice(0, 4)}${attributeId.toString(16).padStart(2, '0')}${rawOad.slice(6)}`.toUpperCase(),
+        oi: rawOad.slice(0, 4),
+        attributeId,
+        index: buffer[offset + 3],
+        feature
+    };
+}
+
+function parseRoadBytes(buffer, offset = 0) {
+    const baseOad = parseOadBytes(buffer, offset);
+    let cursor = offset + 4;
+    const countInfo = readAxdrLength(buffer, cursor);
+    cursor += countInfo.size;
+    const oads = [];
+    for (let i = 0; i < countInfo.len; i++) {
+        oads.push(parseOadBytes(buffer, cursor));
+        cursor += 4;
     }
-    return { parsedValue: items, consumed: offset };
+    return { value: { baseOad, oads }, consumed: cursor - offset };
+}
+
+function parseCsdBytes(buffer, offset = 0) {
+    ensureAxdrBytes(buffer, offset, 1, 'CSD');
+    const choice = buffer[offset];
+    if (choice === 0) return { value: { choice, oad: parseOadBytes(buffer, offset + 1) }, consumed: 5 };
+    if (choice === 1) {
+        const road = parseRoadBytes(buffer, offset + 1);
+        return { value: { choice, road: road.value }, consumed: 1 + road.consumed };
+    }
+    throw new Error(`不支持的CSD选择: ${choice}`);
+}
+
+function parseLengthPrefixedHex(dataBuffer, label) {
+    const lengthInfo = readAxdrLength(dataBuffer, 1);
+    const start = 1 + lengthInfo.size;
+    const end = start + lengthInfo.len;
+    ensureAxdrBytes(dataBuffer, start, lengthInfo.len, label);
+    return { value: dataBuffer.slice(start, end).toString('hex').toUpperCase(), consumed: end };
+}
+
+function parseSidBytes(buffer, offset = 0) {
+    ensureAxdrBytes(buffer, offset, 4, '安全标识');
+    const signature = buffer.slice(offset, offset + 4).toString('hex').toUpperCase();
+    const lengthInfo = readAxdrLength(buffer, offset + 4);
+    const additionalStart = offset + 4 + lengthInfo.size;
+    ensureAxdrBytes(buffer, additionalStart, lengthInfo.len, '安全标识附加信息');
+    const end = additionalStart + lengthInfo.len;
+    return {
+        value: { signature, additional: buffer.slice(additionalStart, end).toString('hex').toUpperCase() },
+        consumed: end - offset
+    };
+}
+
+function formatAxdrDateTime(buffer) {
+    const year = String(buffer.readUInt16BE(0)).padStart(4, '0');
+    const month = String(buffer[2]).padStart(2, '0');
+    const day = String(buffer[3]).padStart(2, '0');
+    const hour = String(buffer[5]).padStart(2, '0');
+    const minute = String(buffer[6]).padStart(2, '0');
+    const second = String(buffer[7]).padStart(2, '0');
+    const milliseconds = String(buffer.readUInt16BE(8)).padStart(3, '0');
+    return `${year}-${month}-${day} ${hour}:${minute}:${second}.${milliseconds}`;
 }
 function enhancedParseData(dataBuffer, oi, attributeId) {
     if (!dataBuffer || dataBuffer.length === 0) return { result: { rawData: '', dataType: '空', parsedValue: null }, consumed: 0 };
@@ -813,23 +887,36 @@ function enhancedParseData(dataBuffer, oi, attributeId) {
                 break;
             }
             case 0x02: { const r = parseStructure(actualData, oi, attributeId); result.dataType = "结构体"; result.parsedValue = r.parsedValue; consumed += r.consumed; break; }
-            case 0x03: result.dataType = "布尔型"; result.parsedValue = actualData[0] !== 0; consumed += 1; break;
+            case 0x03:
+                ensureAxdrBytes(actualData, 0, 1, '布尔型');
+                result.dataType = "布尔型";
+                result.parsedValue = actualData[0] !== 0;
+                consumed += 1;
+                break;
             case 0x04: {
-                // 根据DL/T 698.45标准：0x04是bit-string类型
                 result.dataType = "bit-string";
-                if (actualData.length > 0) {
-                    // 读取数据长度
-                    const dataLength = actualData[0];
-                    result.parsedValue = actualData.slice(1, 1 + dataLength);
-                    consumed += (1 + dataLength);
-                }
+                const lengthInfo = readAxdrLength(dataBuffer, 1);
+                const byteLength = Math.ceil(lengthInfo.len / 8);
+                const start = 1 + lengthInfo.size;
+                ensureAxdrBytes(dataBuffer, start, byteLength, 'bit-string');
+                result.parsedValue = dataBuffer.slice(start, start + byteLength);
+                consumed = start + byteLength;
                 break;
             }
-            case 0x05: result.dataType = "双长整数"; if (actualData.length >= 4) { result.parsedValue = actualData.readInt32BE(0); consumed += 4; } break;
-            case 0x06: result.dataType = "双长无符号整数"; if (actualData.length >= 4) { result.parsedValue = actualData.readUInt32BE(0); consumed += 4; } break;
+            case 0x05:
+                ensureAxdrBytes(actualData, 0, 4, '双长整数');
+                result.dataType = "双长整数";
+                result.parsedValue = actualData.readInt32BE(0);
+                consumed += 4;
+                break;
+            case 0x06:
+                ensureAxdrBytes(actualData, 0, 4, '双长无符号整数');
+                result.dataType = "双长无符号整数";
+                result.parsedValue = actualData.readUInt32BE(0);
+                consumed += 4;
+                break;
             case 0x09: { // byte-string (A-XDR 长长度)
                 result.dataType = "字节串";
-                if (actualData.length === 0) break;
                 const L = readAxdrLength(dataBuffer, 1);
                 const start = 1 + L.size;
                 const end = start + L.len;
@@ -840,7 +927,6 @@ function enhancedParseData(dataBuffer, oi, attributeId) {
             }
             case 0x0A: { // visible-string (A-XDR 长长度)
                 result.dataType = "可见字符串";
-                if (actualData.length === 0) break;
                 const L = readAxdrLength(dataBuffer, 1);
                 const start = 1 + L.size;
                 const end = start + L.len;
@@ -849,66 +935,211 @@ function enhancedParseData(dataBuffer, oi, attributeId) {
                 consumed += (L.size + L.len);
                 break;
             }
+            case 0x0C: { // UTF8-string
+                result.dataType = "UTF8字符串";
+                const L = readAxdrLength(dataBuffer, 1);
+                const start = 1 + L.size;
+                ensureAxdrBytes(dataBuffer, start, L.len, 'UTF8字符串');
+                result.parsedValue = dataBuffer.slice(start, start + L.len).toString('utf8');
+                consumed = start + L.len;
+                break;
+            }
+            case 0x0F:
+                ensureAxdrBytes(actualData, 0, 1, '整数');
+                result.dataType = "整数";
+                result.parsedValue = actualData.readInt8(0);
+                consumed += 1;
+                break;
+            case 0x50:
+                ensureAxdrBytes(actualData, 0, 2, '对象标识');
+                result.dataType = "对象标识";
+                result.parsedValue = actualData.slice(0, 2).toString('hex').toUpperCase();
+                consumed += 2;
+                break;
             case 0x51: {
                 result.dataType = "对象属性描述符";
-                if (actualData.length >= 4) {
-                    const rawOad = actualData.slice(0, 4).toString('hex').toUpperCase();
-                    const attributeByte = actualData[2];
-                    const attributeId = attributeByte & 0x1F;
-                    const feature = (attributeByte >> 5) & 0x07;
-                    result.parsedValue = {
-                        rawOad,
-                        oad: `${rawOad.slice(0, 4)}${attributeId.toString(16).padStart(2, '0')}${rawOad.slice(6)}`.toUpperCase(),
-                        oi: rawOad.slice(0, 4),
-                        attributeId,
-                        index: actualData[3],
-                        feature
-                    };
-                    consumed += 4;
-                }
+                result.parsedValue = parseOadBytes(actualData);
+                consumed += 4;
                 break;
             }
-            case 0x50:
-            case 0x52:
+            case 0x52: {
+                const road = parseRoadBytes(actualData);
+                result.dataType = "记录型对象属性描述符";
+                result.parsedValue = road.value;
+                consumed += road.consumed;
+                break;
+            }
             case 0x53:
+                ensureAxdrBytes(actualData, 0, 4, '对象方法描述符');
+                result.dataType = "对象方法描述符";
+                result.parsedValue = {
+                    oi: actualData.slice(0, 2).toString('hex').toUpperCase(),
+                    methodId: actualData[2],
+                    mode: actualData[3]
+                };
+                consumed += 4;
+                break;
             case 0x54:
+                ensureAxdrBytes(actualData, 0, 3, '时间间隔');
+                result.dataType = "时间间隔";
+                result.parsedValue = { unit: actualData[0], interval: actualData.readUInt16BE(1) };
+                consumed += 3;
+                break;
             case 0x55:
             case 0x56:
-            case 0x57:
-            case 0x58:
-            case 0x59:
-            case 0x5A:
-            case 0x5B:
-            case 0x5C:
-            case 0x5D:
-            case 0x5E:
-            case 0x5F: {
-                result.dataType = `扩展数据(0x${dataType.toString(16).toUpperCase()})`;
-                if (actualData.length >= 4) {
-                    result.parsedValue = {
-                        hex: actualData.slice(0, 4).toString('hex').toUpperCase(),
-                        uint32BE: actualData.readUInt32BE(0),
-                        uint32LE: actualData.readUInt32LE(0)
-                    };
-                    consumed += 4;
-                } else {
-                    result.parsedValue = actualData.toString('hex').toUpperCase();
-                    consumed += actualData.length;
-                }
+            case 0x57: {
+                const labels = { 0x55: '目标服务器地址', 0x56: 'MAC', 0x57: '随机数' };
+                const parsed = parseLengthPrefixedHex(dataBuffer, labels[dataType]);
+                result.dataType = labels[dataType];
+                result.parsedValue = parsed.value;
+                consumed = parsed.consumed;
                 break;
             }
-            case 0x10: result.dataType = "长整数"; if (actualData.length >= 2) { result.parsedValue = actualData.readInt16BE(0); consumed += 2; } break;
-            case 0x11: // unsigned (8-bit)
-                result.dataType = "无符号整数";
-                if (actualData.length >= 1) {
-                    result.parsedValue = actualData[0];
-                    consumed += 1;
-                }
+            case 0x58: {
+                ensureAxdrBytes(actualData, 0, 1, '区间');
+                let offset = 1;
+                const begin = enhancedParseData(actualData.slice(offset), oi, attributeId);
+                if (begin.result.error || begin.consumed <= 0) throw new Error(`区间起始值${begin.result.error || '无法解析'}`);
+                offset += begin.consumed;
+                const end = enhancedParseData(actualData.slice(offset), oi, attributeId);
+                if (end.result.error || end.consumed <= 0) throw new Error(`区间结束值${end.result.error || '无法解析'}`);
+                offset += end.consumed;
+                result.dataType = "区间";
+                result.parsedValue = { type: actualData[0], begin: begin.result, end: end.result };
+                consumed += offset;
                 break;
-            case 0x12: result.dataType = "长无符号整数"; if (actualData.length >= 2) { result.parsedValue = actualData.readUInt16BE(0); consumed += 2; } break;
-            case 0x14: result.dataType = "64位长整数"; if (actualData.length >= 8) { result.parsedValue = actualData.readBigInt64BE(0).toString(); consumed += 8; } break;
-            case 0x15: result.dataType = "64位无符号长整数"; if (actualData.length >= 8) { result.parsedValue = actualData.readBigUInt64BE(0).toString(); consumed += 8; } break;
-            case 0x1C: result.dataType = "简化日期时间"; if (actualData.length >= 7) {
+            }
+            case 0x59:
+                ensureAxdrBytes(actualData, 0, 2, '换算及单位');
+                result.dataType = "换算及单位";
+                result.parsedValue = { scaler: actualData.readInt8(0), unit: actualData[1] };
+                consumed += 2;
+                break;
+            case 0x5B: {
+                const csd = parseCsdBytes(actualData);
+                result.dataType = "列选择描述符";
+                result.parsedValue = csd.value;
+                consumed += csd.consumed;
+                break;
+            }
+            case 0x5D: {
+                const sid = parseSidBytes(actualData);
+                result.dataType = "安全标识";
+                result.parsedValue = sid.value;
+                consumed += sid.consumed;
+                break;
+            }
+            case 0x5E: {
+                const sid = parseSidBytes(actualData);
+                const macOffset = sid.consumed;
+                const macLength = readAxdrLength(actualData, macOffset);
+                const macStart = macOffset + macLength.size;
+                ensureAxdrBytes(actualData, macStart, macLength.len, '安全标识MAC');
+                result.dataType = "安全标识及MAC";
+                result.parsedValue = {
+                    sid: sid.value,
+                    mac: actualData.slice(macStart, macStart + macLength.len).toString('hex').toUpperCase()
+                };
+                consumed += macStart + macLength.len;
+                break;
+            }
+            case 0x5F:
+                ensureAxdrBytes(actualData, 0, 5, '串口控制块');
+                result.dataType = "串口控制块";
+                result.parsedValue = {
+                    baud: actualData[0],
+                    parity: actualData[1],
+                    dataBits: actualData[2],
+                    stopBits: actualData[3],
+                    flowControl: actualData[4]
+                };
+                consumed += 5;
+                break;
+            case 0x60: {
+                const countInfo = readAxdrLength(actualData, 0);
+                let offset = countInfo.size;
+                const columns = [];
+                for (let i = 0; i < countInfo.len; i++) {
+                    const csd = parseCsdBytes(actualData, offset);
+                    columns.push(csd.value);
+                    offset += csd.consumed;
+                }
+                result.dataType = "记录列选择描述符";
+                result.parsedValue = columns;
+                consumed += offset;
+                break;
+            }
+            case 0x10:
+                ensureAxdrBytes(actualData, 0, 2, '长整数');
+                result.dataType = "长整数";
+                result.parsedValue = actualData.readInt16BE(0);
+                consumed += 2;
+                break;
+            case 0x11: // unsigned (8-bit)
+                ensureAxdrBytes(actualData, 0, 1, '无符号整数');
+                result.dataType = "无符号整数";
+                result.parsedValue = actualData[0];
+                consumed += 1;
+                break;
+            case 0x12:
+                ensureAxdrBytes(actualData, 0, 2, '长无符号整数');
+                result.dataType = "长无符号整数";
+                result.parsedValue = actualData.readUInt16BE(0);
+                consumed += 2;
+                break;
+            case 0x14:
+                ensureAxdrBytes(actualData, 0, 8, '64位长整数');
+                result.dataType = "64位长整数";
+                result.parsedValue = actualData.readBigInt64BE(0).toString();
+                consumed += 8;
+                break;
+            case 0x15:
+                ensureAxdrBytes(actualData, 0, 8, '64位无符号长整数');
+                result.dataType = "64位无符号长整数";
+                result.parsedValue = actualData.readBigUInt64BE(0).toString();
+                consumed += 8;
+                break;
+            case 0x16: // enum
+                ensureAxdrBytes(actualData, 0, 1, '枚举');
+                result.dataType = "枚举";
+                result.parsedValue = actualData[0];
+                consumed += 1;
+                break;
+            case 0x17:
+                ensureAxdrBytes(actualData, 0, 4, '32位浮点数');
+                result.dataType = "32位浮点数";
+                result.parsedValue = actualData.readFloatBE(0);
+                consumed += 4;
+                break;
+            case 0x18:
+                ensureAxdrBytes(actualData, 0, 8, '64位浮点数');
+                result.dataType = "64位浮点数";
+                result.parsedValue = actualData.readDoubleBE(0);
+                consumed += 8;
+                break;
+            case 0x19:
+                ensureAxdrBytes(actualData, 0, 10, '日期时间');
+                result.dataType = "日期时间";
+                result.parsedValue = formatAxdrDateTime(actualData);
+                consumed += 10;
+                break;
+            case 0x1A: {
+                ensureAxdrBytes(actualData, 0, 5, '日期');
+                const year = String(actualData.readUInt16BE(0)).padStart(4, '0');
+                result.dataType = "日期";
+                result.parsedValue = `${year}-${String(actualData[2]).padStart(2, '0')}-${String(actualData[3]).padStart(2, '0')}`;
+                consumed += 5;
+                break;
+            }
+            case 0x1B:
+                ensureAxdrBytes(actualData, 0, 3, '时间');
+                result.dataType = "时间";
+                result.parsedValue = `${String(actualData[0]).padStart(2, '0')}:${String(actualData[1]).padStart(2, '0')}:${String(actualData[2]).padStart(2, '0')}`;
+                consumed += 3;
+                break;
+            case 0x1C: {
+                ensureAxdrBytes(actualData, 0, 7, '简化日期时间');
+                result.dataType = "简化日期时间";
                 const y = String(actualData.readUInt16BE(0)).padStart(4, '0');
                 const m = String(actualData[2]).padStart(2, '0');
                 const d = String(actualData[3]).padStart(2, '0');
@@ -917,15 +1148,18 @@ function enhancedParseData(dataBuffer, oi, attributeId) {
                 const s = String(actualData[6]).padStart(2, '0');
                 result.parsedValue = `${y}-${m}-${d} ${h}:${i}:${s}`;
                 consumed += 7;
-            } break;
+                break;
+            }
 
 
             default:
-                result.parsedValue = dataBuffer.toString('hex').toUpperCase();
-                consumed = dataBuffer.length; break;
+                throw new Error(`不支持的数据类型0x${dataType.toString(16).toUpperCase().padStart(2, '0')}`);
         }
-    } catch (e) { result.error = `解析失败: ${e.message}`; consumed = dataBuffer.length; }
-    result.rawData = dataBuffer.slice(0, consumed).toString('hex').toUpperCase();
+    } catch (e) {
+        result.error = `解析失败: ${e.message}`;
+        consumed = 0;
+    }
+    result.rawData = dataBuffer.slice(0, consumed > 0 ? consumed : 1).toString('hex').toUpperCase();
     return { result, consumed };
 }
 
@@ -1467,14 +1701,52 @@ const LAST_STANDARD_EVENT_RECORDS = {
     '302F0200': '计量芯片故障事件'
 };
 
-/** 解析属性2中选中的上一条标准事件记录。 */
-function parseLastStandardEventRecord(dataBuffer, oad, eventName) {
-    const result = createStandardResult(`上一次${eventName}`, oad, dataBuffer);
-    try {
-        const { count, row } = parseSelectedRecordRow(dataBuffer);
-        const valueOf = oi => row.find(cell => cell.oi === oi && cell.feature === 0)?.value ?? null;
-        const baseOis = new Set(['2022', '201E', '2020', '2024', '3300']);
-        const associatedData = row.filter(cell => !baseOis.has(cell.oi)).map(cell => ({
+const LOAD_SWITCH_ENERGY_FIELDS = {
+    '1:0010': ['startForwardActive', '发生时刻正向有功总电能'],
+    '1:0020': ['startReverseActive', '发生时刻反向有功总电能'],
+    '4:0010': ['endForwardActive', '结束时刻正向有功总电能'],
+    '4:0020': ['endReverseActive', '结束时刻反向有功总电能']
+};
+
+/** 将F205继电器单元结构转换为稳定的业务字段。 */
+function parseRelayUnit(cell) {
+    const fields = Array.isArray(cell?.rawValue) ? cell.rawValue.map(item => item?.parsedValue) : [];
+    if (fields.length < 4) return null;
+
+    const [deviceDescription, currentState, switchAttr, wiredState] = fields;
+    return {
+        deviceDescription,
+        currentState,
+        currentStateName: currentState === 0 ? '输出' : currentState === 1 ? '未输出' : '未知',
+        switchAttr,
+        switchAttrName: switchAttr === 0 ? '脉冲' : switchAttr === 1 ? '保持式' : '未知',
+        wiredState,
+        wiredStateName: wiredState === 0 ? '接入' : wiredState === 1 ? '未接入' : '未知',
+        rawData: cell.rawData
+    };
+}
+
+const STANDARD_EVENT_RECORD_SCHEMAS = {
+    '302B0200': {
+        structures: {
+            relayUnit: { oi: 'F205', parser: parseRelayUnit }
+        },
+        associatedFields: LOAD_SWITCH_ENERGY_FIELDS,
+        outputFields: {
+            relayUnit: 'structures.relayUnit',
+            switchState: 'structures.relayUnit.currentState',
+            switchStateName: 'structures.relayUnit.currentStateName',
+            startForwardActive: 'values.startForwardActive',
+            startReverseActive: 'values.startReverseActive',
+            endForwardActive: 'values.endForwardActive',
+            endReverseActive: 'values.endReverseActive'
+        }
+    }
+};
+
+function toStandardAssociatedCell(cell, fieldInfo = null) {
+    if (!fieldInfo) {
+        return {
             oad: cell.oad,
             rawOad: cell.rawOad,
             name: cell.name,
@@ -1485,7 +1757,72 @@ function parseLastStandardEventRecord(dataBuffer, oad, eventName) {
             unit: cell.unit,
             scale: cell.scale,
             rawData: cell.rawData
-        }));
+        };
+    }
+
+    const valid = Number.isFinite(cell.rawValue) ? cell.rawValue !== 0xFFFFFFFF : true;
+    return {
+        key: fieldInfo[0],
+        label: fieldInfo[1],
+        oad: cell.oad,
+        rawOad: cell.rawOad,
+        feature: cell.feature,
+        featureName: cell.featureName,
+        value: valid ? cell.value : null,
+        rawValue: cell.rawValue,
+        unit: cell.unit,
+        scale: cell.scale,
+        valid,
+        rawData: cell.rawData
+    };
+}
+
+function readMappedValue(source, path) {
+    return path.split('.').reduce((value, key) => value?.[key], source) ?? null;
+}
+
+/** 按事件schema映射结构化字段；未配置的事件保留通用关联数据。 */
+function applyStandardEventSchema(row, schema, baseOis) {
+    if (!schema) {
+        return {
+            associatedData: row.filter(cell => !baseOis.has(cell.oi)).map(cell => toStandardAssociatedCell(cell)),
+            output: {}
+        };
+    }
+
+    const structures = {};
+    Object.entries(schema.structures || {}).forEach(([key, descriptor]) => {
+        structures[key] = descriptor.parser(row.find(cell => cell.oi === descriptor.oi));
+    });
+
+    const values = {};
+    const associatedData = row.filter(cell => schema.associatedFields?.[`${cell.feature}:${cell.oi}`]).map(cell => {
+        const fieldInfo = schema.associatedFields[`${cell.feature}:${cell.oi}`];
+        const item = toStandardAssociatedCell(cell, fieldInfo);
+        values[fieldInfo[0]] = item.value;
+        return item;
+    });
+
+    const source = { structures, values };
+    const output = Object.fromEntries(Object.entries(schema.outputFields || {}).map(([key, path]) => [
+        key,
+        readMappedValue(source, path)
+    ]));
+    return { associatedData, output };
+}
+
+/** 解析属性2中选中的上一条标准事件记录。 */
+function parseLastStandardEventRecord(dataBuffer, oad, eventName) {
+    const result = createStandardResult(`上一次${eventName}`, oad, dataBuffer);
+    try {
+        const { count, row } = parseSelectedRecordRow(dataBuffer);
+        const valueOf = oi => row.find(cell => cell.oi === oi && cell.feature === 0)?.value ?? null;
+        const baseOis = new Set(['2022', '201E', '2020', '2024', '3300']);
+        const { associatedData, output } = applyStandardEventSchema(
+            row,
+            STANDARD_EVENT_RECORD_SCHEMAS[oad],
+            baseOis
+        );
 
         result.value = {
             type: 'standard_event_record',
@@ -1498,6 +1835,7 @@ function parseLastStandardEventRecord(dataBuffer, oad, eventName) {
             endTime: valueOf('2020'),
             source: valueOf('2024'),
             reportStatus: valueOf('3300'),
+            ...output,
             associatedData,
             rawData: Buffer.from(dataBuffer).toString('hex').toUpperCase()
         };
@@ -1591,7 +1929,9 @@ function parseSelectedRecordRow(dataBuffer) {
 
     const row = columns.map(column => {
         const { result: parsed, consumed } = enhancedParseData(buffer.slice(offset), column.oi, column.attributeId.toString(16));
-        if (!consumed) throw new Error('记录列解析未消费数据');
+        if (parsed.error || !consumed) {
+            throw new Error(`记录列${column.rawOad}解析失败: ${parsed.error || '未消费数据'}`);
+        }
         offset += consumed;
         const rawValue = parsed.parsedValue;
         const value = typeof rawValue === 'number' && column.scale
@@ -2553,12 +2893,9 @@ function parseGetResponseListEntries(buffer, offset) {
         }
 
         const dataBuffer = buffer.slice(choiceOutcome.dataOffset);
-        let consumed = dataBuffer.length;
-        try {
-            const { consumed: len } = enhancedParseData(dataBuffer, oad.slice(0, 4), oad.slice(4, 6));
-            consumed = len;
-        } catch (_) {
-            // ignore, fallback to entire buffer remainder
+        const { result: parsedResult, consumed } = enhancedParseData(dataBuffer, oad.slice(0, 4), oad.slice(4, 6));
+        if (parsedResult.error || consumed <= 0) {
+            throw new Error(`GET-Response-List OAD ${oad}解析失败: ${parsedResult.error || '数据未消费'}`);
         }
         const rawChunk = dataBuffer.slice(0, consumed);
         const parsed = oadParserRouter(rawChunk, oad);
@@ -2986,3 +3323,4 @@ function batchMsg698(msg) {
 
 module.exports = batchMsg698;
 module.exports.batchMsg698 = batchMsg698;
+module.exports.enhancedParseData = enhancedParseData;
