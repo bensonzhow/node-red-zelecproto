@@ -1176,6 +1176,9 @@ function parseLast645StandardEventRecord(arrPush, di) {
 
 function batchMsgMain(msg) {
     /******************** 入口：根据 msg.mode / msg.action 选择 encode / decode ********************/
+    // 空消息直接原样返回（与 698 行为一致），避免读取 msg.mode 时抛异常
+    if (!msg) return msg;
+
     const MODE = String(msg.mode || msg.action || 'decode').toLowerCase();
 
     // 可选：地址是否在“编码”时倒序（有些 645 实装要求）；解码固定按帧内小端规则处理

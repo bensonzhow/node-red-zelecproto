@@ -1,0 +1,5858 @@
+{
+  "generatedFromLogFiles": 120,
+  "sampling": "first-frame-per-type",
+  "expectations": "readable-decoded-fields-v1",
+  "caseCount": 106,
+  "typeCount": 106,
+  "types": [
+    "0000FF00",
+    "00010001",
+    "00010002",
+    "00010003",
+    "00010004",
+    "00010005",
+    "00010006",
+    "00010007",
+    "00010008",
+    "00010009",
+    "0001000A",
+    "0001000B",
+    "0001000C",
+    "0001FF00",
+    "00020001",
+    "00020002",
+    "00020003",
+    "00020004",
+    "00020005",
+    "00020006",
+    "00020007",
+    "00020008",
+    "00020009",
+    "0002000A",
+    "0002000B",
+    "0002000C",
+    "0002FF00",
+    "02010100",
+    "02020100",
+    "02030000",
+    "02060000",
+    "02800008",
+    "0280000A",
+    "03110000",
+    "03300101",
+    "03300D00",
+    "03360000",
+    "03370000",
+    "04000101",
+    "04000102",
+    "04000409",
+    "0400040B",
+    "04000501",
+    "04000503",
+    "05060101",
+    "05060102",
+    "05060103",
+    "05060104",
+    "05060105",
+    "05060106",
+    "05060107",
+    "05060108",
+    "05060109",
+    "0506010A",
+    "0506010B",
+    "0506010C",
+    "0506010D",
+    "0506010E",
+    "0506010F",
+    "05060110",
+    "05060111",
+    "05060112",
+    "05060113",
+    "05060114",
+    "05060115",
+    "05060116",
+    "05060117",
+    "05060118",
+    "05060119",
+    "0506011A",
+    "0506011B",
+    "0506011C",
+    "0506011D",
+    "0506011E",
+    "05060201",
+    "05060202",
+    "05060203",
+    "05060204",
+    "05060205",
+    "05060206",
+    "05060207",
+    "05060208",
+    "05060209",
+    "0506020A",
+    "0506020B",
+    "0506020C",
+    "0506020D",
+    "0506020E",
+    "0506020F",
+    "05060210",
+    "05060211",
+    "05060212",
+    "05060213",
+    "05060214",
+    "05060215",
+    "05060216",
+    "05060217",
+    "05060218",
+    "05060219",
+    "0506021A",
+    "0506021B",
+    "0506021C",
+    "0506021D",
+    "0506021E",
+    "address_response",
+    "control_error"
+  ],
+  "cases": [
+    {
+      "frame": "684422940000006891183332333333333333333333333333333333333333333333333A16",
+      "type": "0000FF00",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0000FF00",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            }
+          ],
+          "value": [
+            "000000.00",
+            "000000.00",
+            "000000.00",
+            "000000.00",
+            "000000.00"
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          "000000.00",
+          "000000.00",
+          "000000.00",
+          "000000.00",
+          "000000.00"
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读当前组合有功电能数据块"
+    },
+    {
+      "frame": "684422940000006891083433343333333333FD16",
+      "type": "00010001",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00010001",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上1结算月)正向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083533343333333333FE16",
+      "type": "00010002",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00010002",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上2结算月)正向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083633343333333333FF16",
+      "type": "00010003",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00010003",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上3结算月)正向有功总电能"
+    },
+    {
+      "frame": "6844229400000068910837333433333333330016",
+      "type": "00010004",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00010004",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上4结算月)正向有功总电能"
+    },
+    {
+      "frame": "6844229400000068910838333433333333330116",
+      "type": "00010005",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00010005",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上5结算月)正向有功总电能"
+    },
+    {
+      "frame": "6844229400000068910839333433333333330216",
+      "type": "00010006",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00010006",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上6结算月)正向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083A333433333333330316",
+      "type": "00010007",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00010007",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上7结算月)正向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083B333433333333330416",
+      "type": "00010008",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00010008",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上8结算月)正向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083C333433333333330516",
+      "type": "00010009",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00010009",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上9结算月)正向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083D333433333333330616",
+      "type": "0001000A",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0001000A",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上10结算月)正向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083E333433333333330716",
+      "type": "0001000B",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0001000B",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上11结算月)正向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083F333433333333330816",
+      "type": "0001000C",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0001000C",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上12结算月)正向有功总电能"
+    },
+    {
+      "frame": "684422940000006891183332343333333333333333333333333333333333333333333B16",
+      "type": "0001FF00",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0001FF00",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            }
+          ],
+          "value": [
+            "000000.00",
+            "000000.00",
+            "000000.00",
+            "000000.00",
+            "000000.00"
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          "000000.00",
+          "000000.00",
+          "000000.00",
+          "000000.00",
+          "000000.00"
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读当前正向有功电能数据块"
+    },
+    {
+      "frame": "684422940000006891083433353333333333FE16",
+      "type": "00020001",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00020001",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上1结算月)反向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083533353333333333FF16",
+      "type": "00020002",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00020002",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上2结算月)反向有功总电能"
+    },
+    {
+      "frame": "6844229400000068910836333533333333330016",
+      "type": "00020003",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00020003",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上3结算月)反向有功总电能"
+    },
+    {
+      "frame": "6844229400000068910837333533333333330116",
+      "type": "00020004",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00020004",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上4结算月)反向有功总电能"
+    },
+    {
+      "frame": "6844229400000068910838333533333333330216",
+      "type": "00020005",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00020005",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上5结算月)反向有功总电能"
+    },
+    {
+      "frame": "6844229400000068910839333533333333330316",
+      "type": "00020006",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00020006",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上6结算月)反向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083A333533333333330416",
+      "type": "00020007",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00020007",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上7结算月)反向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083B333533333333330516",
+      "type": "00020008",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00020008",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上8结算月)反向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083C333533333333330616",
+      "type": "00020009",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "00020009",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上9结算月)反向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083D333533333333330716",
+      "type": "0002000A",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0002000A",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上10结算月)反向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083E333533333333330816",
+      "type": "0002000B",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0002000B",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上11结算月)反向有功总电能"
+    },
+    {
+      "frame": "684422940000006891083F333533333333330916",
+      "type": "0002000C",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0002000C",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上12结算月)反向有功总电能"
+    },
+    {
+      "frame": "684422940000006891183332353333333333333333333333333333333333333333333C16",
+      "type": "0002FF00",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0002FF00",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": "000000.00"
+            }
+          ],
+          "value": [
+            "000000.00",
+            "000000.00",
+            "000000.00",
+            "000000.00",
+            "000000.00"
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          "000000.00",
+          "000000.00",
+          "000000.00",
+          "000000.00",
+          "000000.00"
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读当前反向有功电能数据块"
+    },
+    {
+      "frame": "68442294000000689106333434353855BE16",
+      "type": "02010100",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "02010100",
+        "exec_addr": "000000942244",
+        "len": 6,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": 220502
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读A相电压"
+    },
+    {
+      "frame": "68442294000000689107333435353C4433E616",
+      "type": "02020100",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "02020100",
+        "exec_addr": "000000942244",
+        "len": 7,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": 1109
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读A相电流"
+    },
+    {
+      "frame": "6844229400000068910733333635C59539C616",
+      "type": "02030000",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "02030000",
+        "exec_addr": "000000942244",
+        "len": 7,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": 66292
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读瞬时总有功功率"
+    },
+    {
+      "frame": "68442294000000689106333339353343AB16",
+      "type": "02060000",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "02060000",
+        "exec_addr": "000000942244",
+        "len": 6,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": 1000
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读总功率因数"
+    },
+    {
+      "frame": "684422940000006891063B33B33535331F16",
+      "type": "02800008",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "02800008",
+        "exec_addr": "000000942244",
+        "len": 6,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": {
+          "description": "时钟电池电压: 0.02V",
+          "rawValue": 2,
+          "unit": "V",
+          "voltage": 0.02
+        }
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读时钟电池电压"
+    },
+    {
+      "frame": "684422940000006891083D33B335C66C9933B916",
+      "type": "0280000A",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0280000A",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": 663993
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读时钟电池工作时间"
+    },
+    {
+      "frame": "6844229400000068910733334436BB34336416",
+      "type": "03110000",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "03110000",
+        "exec_addr": "000000942244",
+        "len": 7,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": 188
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "掉电次数"
+    },
+    {
+      "frame": "6844229400000068916E3434633676374963344833333333B43333333333333332323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232B416",
+      "type": "03300101",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "03300101",
+        "exec_addr": "000000942244",
+        "len": 110,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": {
+          "energies": [
+            {
+              "key": "totalForwardActive",
+              "label": "清零前正向有功总电能",
+              "rawBCD": "81000000",
+              "scale": -2,
+              "unit": "kWh",
+              "valid": true,
+              "value": 0.81
+            },
+            {
+              "key": "totalReverseActive",
+              "label": "清零前反向有功总电能",
+              "rawBCD": "00000000",
+              "scale": -2,
+              "unit": "kWh",
+              "valid": true,
+              "value": 0
+            },
+            {
+              "key": "totalReactiveQ1",
+              "label": "清零前第一象限无功总电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "totalReactiveQ2",
+              "label": "清零前第二象限无功总电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "totalReactiveQ3",
+              "label": "清零前第三象限无功总电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "totalReactiveQ4",
+              "label": "清零前第四象限无功总电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseAForwardActive",
+              "label": "清零前A相正向有功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kWh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseAReverseActive",
+              "label": "清零前A相反向有功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kWh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseAReactiveQ1",
+              "label": "清零前A相第一象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseAReactiveQ2",
+              "label": "清零前A相第二象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseAReactiveQ3",
+              "label": "清零前A相第三象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseAReactiveQ4",
+              "label": "清零前A相第四象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseBForwardActive",
+              "label": "清零前B相正向有功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kWh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseBReverseActive",
+              "label": "清零前B相反向有功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kWh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseBReactiveQ1",
+              "label": "清零前B相第一象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseBReactiveQ2",
+              "label": "清零前B相第二象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseBReactiveQ3",
+              "label": "清零前B相第三象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseBReactiveQ4",
+              "label": "清零前B相第四象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseCForwardActive",
+              "label": "清零前C相正向有功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kWh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseCReverseActive",
+              "label": "清零前C相反向有功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kWh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseCReactiveQ1",
+              "label": "清零前C相第一象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseCReactiveQ2",
+              "label": "清零前C相第二象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseCReactiveQ3",
+              "label": "清零前C相第三象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            },
+            {
+              "key": "phaseCReactiveQ4",
+              "label": "清零前C相第四象限无功电能",
+              "rawBCD": "FFFFFFFF",
+              "scale": -2,
+              "unit": "kvarh",
+              "valid": false,
+              "value": null
+            }
+          ],
+          "eventTime": "2015-01-30 16:04:43",
+          "eventTimeRaw": "150130160443",
+          "hasRecord": true,
+          "ok": true,
+          "operatorCode": "00000000",
+          "rawData": "430416300115000000008100000000000000FFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFF",
+          "recordIndex": 1,
+          "type": "meter_reset_record"
+        }
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上1次)电表清零记录"
+    },
+    {
+      "frame": "68442294000000689107334063363333330716",
+      "type": "03300D00",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "03300D00",
+        "exec_addr": "000000942244",
+        "len": 7,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": 0
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读开表盖总次数"
+    },
+    {
+      "frame": "68442294000000689107333369363333330016",
+      "type": "03360000",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "03360000",
+        "exec_addr": "000000942244",
+        "len": 7,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": 0
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读负荷开关误动作事件记录次数"
+    },
+    {
+      "frame": "6844229400000068910733336A363333330116",
+      "type": "03370000",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "03370000",
+        "exec_addr": "000000942244",
+        "len": 7,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": 0
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读电源异常事件总次数"
+    },
+    {
+      "frame": "6844229400000068910834343337383B38593916",
+      "type": "04000101",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "04000101",
+        "exec_addr": "000000942244",
+        "len": 8,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": "20260508"
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读日期及星期"
+    },
+    {
+      "frame": "68442294000000689107353433377A45483C16",
+      "type": "04000102",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "04000102",
+        "exec_addr": "000000942244",
+        "len": 7,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": "151247"
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读时间"
+    },
+    {
+      "frame": "684422940000006891073C373337334533EA16",
+      "type": "04000409",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "04000409",
+        "exec_addr": "000000942244",
+        "len": 7,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": {
+          "bcdData": "1200",
+          "description": "有功脉冲常数: 1200 imp/kWh",
+          "rawValue": 1200,
+          "unit": "imp/kWh"
+        }
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读脉冲有功常数"
+    },
+    {
+      "frame": "6844229400000068910E3E373337338D606B6B648C8D7777A916",
+      "type": "0400040B",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0400040B",
+        "exec_addr": "000000942244",
+        "len": 14,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": "Z-881YZDD"
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读电表型号"
+    },
+    {
+      "frame": "68442294000000689106343833373F33A916",
+      "type": "04000501",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "04000501",
+        "exec_addr": "000000942244",
+        "len": 6,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": {
+          "binary": "0000000000001100",
+          "bits": {
+            "bit0": 0,
+            "bit1": 0,
+            "bit10": 0,
+            "bit11": 0,
+            "bit12": 0,
+            "bit13": 0,
+            "bit14": 0,
+            "bit15": 0,
+            "bit2": 1,
+            "bit3": 1,
+            "bit4": 0,
+            "bit5": 0,
+            "bit6": 0,
+            "bit7": 0,
+            "bit8": 0,
+            "bit9": 0
+          },
+          "rawValue": 12
+        }
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读电表运行状态字1"
+    },
+    {
+      "frame": "684422940000006891063638333733339F16",
+      "type": "04000503",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "04000503",
+        "exec_addr": "000000942244",
+        "len": 6,
+        "ok": true,
+        "success": true,
+        "type": "data_response",
+        "value": {
+          "binary": "0000000000000000",
+          "bits": {
+            "bit0": 0,
+            "bit1": 0,
+            "bit10": 0,
+            "bit11": 0,
+            "bit12": 0,
+            "bit13": 0,
+            "bit14": 0,
+            "bit15": 0,
+            "bit2": 0,
+            "bit3": 0,
+            "bit4": 0,
+            "bit5": 0,
+            "bit6": 0,
+            "bit7": 0,
+            "bit8": 0,
+            "bit9": 0
+          },
+          "rawValue": 0
+        }
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读状态字3"
+    },
+    {
+      "frame": "684422940000006891183434393833333333333333333333333333333333333333334816",
+      "type": "05060101",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060101",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上1次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183534393833333333333333333333333333333333333333334916",
+      "type": "05060102",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060102",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上2次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183634393833333333333333333333333333333333333333334A16",
+      "type": "05060103",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060103",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上3次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183734393833333333333333333333333333333333333333334B16",
+      "type": "05060104",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060104",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上4次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183834393833333333333333333333333333333333333333334C16",
+      "type": "05060105",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060105",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上5次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183934393833333333333333333333333333333333333333334D16",
+      "type": "05060106",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060106",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上6次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183A34393833333333333333333333333333333333333333334E16",
+      "type": "05060107",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060107",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上7次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183B34393833333333333333333333333333333333333333334F16",
+      "type": "05060108",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060108",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上8次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183C34393833333333333333333333333333333333333333335016",
+      "type": "05060109",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060109",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上9次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183D34393833333333333333333333333333333333333333335116",
+      "type": "0506010A",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506010A",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上10次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183E34393833333333333333333333333333333333333333335216",
+      "type": "0506010B",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506010B",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上11次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183F34393833333333333333333333333333333333333333335316",
+      "type": "0506010C",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506010C",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上12次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184034393833333333333333333333333333333333333333335416",
+      "type": "0506010D",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506010D",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上13次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184134393833333333333333333333333333333333333333335516",
+      "type": "0506010E",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506010E",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上14次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184234393833333333333333333333333333333333333333335616",
+      "type": "0506010F",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506010F",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上15次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184334393833333333333333333333333333333333333333335716",
+      "type": "05060110",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060110",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上16次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184434393833333333333333333333333333333333333333335816",
+      "type": "05060111",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060111",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上17次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184534393833333333333333333333333333333333333333335916",
+      "type": "05060112",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060112",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上18次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184634393833333333333333333333333333333333333333335A16",
+      "type": "05060113",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060113",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上19次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184734393833333333333333333333333333333333333333335B16",
+      "type": "05060114",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060114",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上20次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184834393833333333333333333333333333333333333333335C16",
+      "type": "05060115",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060115",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上21次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184934393833333333333333333333333333333333333333335D16",
+      "type": "05060116",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060116",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上22次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184A34393833333333333333333333333333333333333333335E16",
+      "type": "05060117",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060117",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上23次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184B34393833333333333333333333333333333333333333335F16",
+      "type": "05060118",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060118",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上24次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184C34393833333333333333333333333333333333333333336016",
+      "type": "05060119",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060119",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上25次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184D34393833333333333333333333333333333333333333336116",
+      "type": "0506011A",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506011A",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上26次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184E34393833333333333333333333333333333333333333336216",
+      "type": "0506011B",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506011B",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上27次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184F34393833333333333333333333333333333333333333336316",
+      "type": "0506011C",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506011C",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上28次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891185034393833333333333333333333333333333333333333336416",
+      "type": "0506011D",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506011D",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上29次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891185134393833333333333333333333333333333333333333336516",
+      "type": "0506011E",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506011E",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上30次)日冻结正向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183435393833333333333333333333333333333333333333334916",
+      "type": "05060201",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060201",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上1次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183535393833333333333333333333333333333333333333334A16",
+      "type": "05060202",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060202",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上2次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183635393833333333333333333333333333333333333333334B16",
+      "type": "05060203",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060203",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上3次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183735393833333333333333333333333333333333333333334C16",
+      "type": "05060204",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060204",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上4次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183835393833333333333333333333333333333333333333334D16",
+      "type": "05060205",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060205",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上5次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183935393833333333333333333333333333333333333333334E16",
+      "type": "05060206",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060206",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上6次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183A35393833333333333333333333333333333333333333334F16",
+      "type": "05060207",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060207",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上7次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183B35393833333333333333333333333333333333333333335016",
+      "type": "05060208",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060208",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上8次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183C35393833333333333333333333333333333333333333335116",
+      "type": "05060209",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060209",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上9次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183D35393833333333333333333333333333333333333333335216",
+      "type": "0506020A",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506020A",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上10次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183E35393833333333333333333333333333333333333333335316",
+      "type": "0506020B",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506020B",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上11次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891183F35393833333333333333333333333333333333333333335416",
+      "type": "0506020C",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506020C",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上12次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184035393833333333333333333333333333333333333333335516",
+      "type": "0506020D",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506020D",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上13次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184135393833333333333333333333333333333333333333335616",
+      "type": "0506020E",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506020E",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上14次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184235393833333333333333333333333333333333333333335716",
+      "type": "0506020F",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506020F",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上15次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184335393833333333333333333333333333333333333333335816",
+      "type": "05060210",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060210",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上16次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184435393833333333333333333333333333333333333333335916",
+      "type": "05060211",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060211",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上17次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184535393833333333333333333333333333333333333333335A16",
+      "type": "05060212",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060212",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上18次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184635393833333333333333333333333333333333333333335B16",
+      "type": "05060213",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060213",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上19次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184735393833333333333333333333333333333333333333335C16",
+      "type": "05060214",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060214",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上20次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184835393833333333333333333333333333333333333333335D16",
+      "type": "05060215",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060215",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上21次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184935393833333333333333333333333333333333333333335E16",
+      "type": "05060216",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060216",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上22次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184A35393833333333333333333333333333333333333333335F16",
+      "type": "05060217",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060217",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上23次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184B35393833333333333333333333333333333333333333336016",
+      "type": "05060218",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060218",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上24次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184C35393833333333333333333333333333333333333333336116",
+      "type": "05060219",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "05060219",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上25次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184D35393833333333333333333333333333333333333333336216",
+      "type": "0506021A",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506021A",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上26次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184E35393833333333333333333333333333333333333333336316",
+      "type": "0506021B",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506021B",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上27次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891184F35393833333333333333333333333333333333333333336416",
+      "type": "0506021C",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506021C",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上28次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891185035393833333333333333333333333333333333333333336516",
+      "type": "0506021D",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506021D",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上29次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006891185135393833333333333333333333333333333333333333336616",
+      "type": "0506021E",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 145,
+        "di": "0506021E",
+        "exec_addr": "000000942244",
+        "len": 24,
+        "ok": true,
+        "payload": {
+          "data": [
+            {
+              "label": "总",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "尖",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "峰",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "平",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            },
+            {
+              "label": "谷",
+              "rawBCD": "00 00 00 00",
+              "scale": -2,
+              "unit": "kWh",
+              "value": 0
+            }
+          ],
+          "value": [
+            0,
+            0,
+            0,
+            0,
+            0
+          ]
+        },
+        "success": true,
+        "type": "data_response",
+        "value": [
+          0,
+          0,
+          0,
+          0,
+          0
+        ]
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读(上30次)日冻结反向有功电能数据"
+    },
+    {
+      "frame": "684422940000006893067755C73333338F16",
+      "type": "address_response",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "addr_from_data": "000000942244",
+        "ctrl": 147,
+        "exec_addr": "000000942244",
+        "len": 6,
+        "ok": true,
+        "same": true,
+        "success": true,
+        "type": "address_response"
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "尝试645协议....."
+    },
+    {
+      "frame": "6844229400000068D10135D116",
+      "type": "control_error",
+      "expected": {
+        "addr_bytes_hex": "442294000000",
+        "ctrl": 209,
+        "data": "02",
+        "detail": "02",
+        "exec_addr": "000000942244",
+        "len": 1,
+        "ok": false,
+        "reason": "control_rejected",
+        "type": "control_error"
+      },
+      "sourceLog": "M_1500001010700009422440_3.log",
+      "label": "读脉冲无功常数"
+    }
+  ]
+}

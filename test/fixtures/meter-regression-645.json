@@ -1,0 +1,381 @@
+{
+  "description": "2026-08-06 电表整体测试日志中已成功业务的 DL/T 645-2007 回归样本；日志中无样本的“上一次事件记录”类 DI 使用按解析器格式构造的合成帧（sourceLog 标注为 synthetic）",
+  "encodeCases": [
+    {
+      "name": "广播读取电表地址",
+      "input": {
+        "mode": "encode",
+        "cs_mode": "full",
+        "payload": { "oad": "readAddress" }
+      },
+      "framePath": "payload.payload",
+      "expectedFrame": "FEFEFEFE68AAAAAAAAAAAA681300DF16"
+    },
+    {
+      "name": "读取电表型号",
+      "input": {
+        "mode": "encode",
+        "cs_mode": "full",
+        "payload": { "oad": "0400040B", "com_exec_addr": "643798000000" }
+      },
+      "framePath": "payload.payload",
+      "expectedFrame": "FEFEFEFE686437980000006811043E373337F716"
+    },
+    {
+      "name": "读取当前正向有功电能",
+      "input": {
+        "mode": "encode",
+        "cs_mode": "full",
+        "payload": { "oad": "0001FF00", "com_exec_addr": "643798000000" }
+      },
+      "framePath": "payload.payload",
+      "expectedFrame": "FEFEFEFE6864379800000068110433323433E416"
+    }
+  ],
+  "decodeCases": [
+    {
+      "name": "读取电表地址",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "68643798000000689306976ACB3333330116",
+      "expected": {
+        "payload.type": "address_response",
+        "payload.ok": true,
+        "payload.exec_addr": "000000983764",
+        "payload.addr_from_data": "000000983764",
+        "payload.same": true
+      }
+    },
+    {
+      "name": "读取电表型号",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068910E3E373337338D606B6B648C8D7777E216",
+      "expected": {
+        "payload.type": "data_response",
+        "payload.di": "0400040B",
+        "payload.value": "Z-881YZDD"
+      }
+    },
+    {
+      "name": "读取有功脉冲常数",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "686437980000006891073C3733373345332316",
+      "expected": {
+        "payload.di": "04000409",
+        "payload.value.rawValue": 1200,
+        "payload.value.unit": "imp/kWh",
+        "payload.value.bcdData": "1200"
+      }
+    },
+    {
+      "name": "无功脉冲常数控制拒绝",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068D101350A16",
+      "expected": {
+        "payload.type": "control_error",
+        "payload.ok": false,
+        "payload.reason": "control_rejected",
+        "payload.detail": "02"
+      }
+    },
+    {
+      "name": "当前组合有功电能",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068911833323333B4387433333333335A5A443333C55A3386B934332C16",
+      "expected": {
+        "payload.di": "0000FF00",
+        "payload.value": ["004105.81", "000000.00", "001127.27", "002792.00", "000186.53"]
+      }
+    },
+    {
+      "name": "当前正向有功电能",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068911833323433B4387433333333335A5A443333C55A3386B934332D16",
+      "expected": {
+        "payload.di": "0001FF00",
+        "payload.value": ["004105.81", "000000.00", "001127.27", "002792.00", "000186.53"]
+      }
+    },
+    {
+      "name": "当前反向有功电能",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "686437980000006891183332353333333333333333333333333333333333333333337516",
+      "expected": {
+        "payload.di": "0002FF00",
+        "payload.value": ["000000.00", "000000.00", "000000.00", "000000.00", "000000.00"]
+      }
+    },
+    {
+      "name": "A 相电流初始读数",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068910733343535AB44338E16",
+      "expected": {
+        "payload.di": "02020100",
+        "payload.value": 1178
+      }
+    },
+    {
+      "name": "掉电次数",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "68643798000000689107333344365436333816",
+      "expected": {
+        "payload.di": "03110000",
+        "payload.value": 321
+      }
+    },
+    {
+      "name": "上一次电表清零记录",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068916E343463368C5748593449333333336A3333333333333332323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232323232CF16",
+      "expected": {
+        "payload.di": "03300101",
+        "payload.value.type": "meter_reset_record",
+        "payload.value.hasRecord": true,
+        "payload.value.eventTime": "2016-01-26 15:24:59",
+        "payload.value.energies.0.value": 0.37
+      }
+    },
+    {
+      "name": "开表盖总次数",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "68643798000000689107334063363333334016",
+      "expected": {
+        "payload.di": "03300D00",
+        "payload.value": 0
+      }
+    },
+    {
+      "name": "电源异常事件总次数",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068910733336A363333333A16",
+      "expected": {
+        "payload.di": "03370000",
+        "payload.value": 0
+      }
+    },
+    {
+      "name": "负荷开关误动作事件总次数",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "68643798000000689107333369363333333916",
+      "expected": {
+        "payload.di": "03360000",
+        "payload.value": 0
+      }
+    },
+    {
+      "name": "上一次负荷开关误动作事件",
+      "sourceLog": "synthetic",
+      "frame": "686437980000006891213433693663483C5B3A5978493C5B3A5934896745333333333333684533AB3333333716",
+      "expected": {
+        "payload.ok": true,
+        "payload.di": "03360001",
+        "payload.value.type": "standard_event_record",
+        "payload.value.eventName": "负荷开关误动作事件",
+        "payload.value.hasRecord": true,
+        "payload.value.startTime": "2026-07-28 09:15:30",
+        "payload.value.endTime": "2026-07-28 09:16:45",
+        "payload.value.switchState": 1,
+        "payload.value.switchStateName": "断",
+        "payload.value.startForwardActive": 1234.56,
+        "payload.value.startReverseActive": 0,
+        "payload.value.endForwardActive": 1235,
+        "payload.value.endReverseActive": 0.78
+      }
+    },
+    {
+      "name": "上一次负荷开关误动作事件无记录",
+      "sourceLog": "synthetic",
+      "frame": "686437980000006891213433693633333333333333333333333333333333333333333333333333333333337F16",
+      "expected": {
+        "payload.ok": true,
+        "payload.di": "03360001",
+        "payload.value.hasRecord": false,
+        "payload.value.startTime": null,
+        "payload.value.switchState": 0,
+        "payload.value.switchStateName": "通"
+      }
+    },
+    {
+      "name": "上一次电源异常事件",
+      "sourceLog": "synthetic",
+      "frame": "6864379800000068911834336A36435536353B59445536353B59C3AB893333333333D516",
+      "expected": {
+        "payload.ok": true,
+        "payload.di": "03370001",
+        "payload.value.type": "standard_event_record",
+        "payload.value.eventName": "电源异常事件",
+        "payload.value.hasRecord": true,
+        "payload.value.startTime": "2026-08-02 03:22:10",
+        "payload.value.endTime": "2026-08-02 03:22:11",
+        "payload.value.switchState": null,
+        "payload.value.startForwardActive": 5678.9,
+        "payload.value.startReverseActive": 0,
+        "payload.value.endForwardActive": null
+      }
+    },
+    {
+      "name": "上一次掉电事件",
+      "sourceLog": "synthetic",
+      "frame": "68643798000000689110343344368C3647383B5933634B383B590416",
+      "expected": {
+        "payload.ok": true,
+        "payload.di": "03110001",
+        "payload.value.type": "standard_event_record",
+        "payload.value.eventName": "掉电事件",
+        "payload.value.hasRecord": true,
+        "payload.value.startTime": "2026-08-05 14:03:59",
+        "payload.value.endTime": "2026-08-05 18:30:00",
+        "payload.value.associatedData": []
+      }
+    },
+    {
+      "name": "上一次开盖明细",
+      "sourceLog": "synthetic",
+      "frame": "68643798000000689140344063363333446339593338446339593433433333333333674533339338333332323232333333333833433333333333674533339338333333333333333333332916",
+      "expected": {
+        "payload.ok": true,
+        "payload.di": "03300D01",
+        "payload.value.type": "cover_open_record",
+        "payload.value.startTime": "2026-06-30 11:00:00",
+        "payload.value.endTime": "2026-06-30 11:05:00",
+        "payload.value.beforeForwardActive": 1000.01,
+        "payload.value.afterForwardActive": 1000.05,
+        "payload.value.energies.2.value": 12.34,
+        "payload.value.energies.3.value": 5.6,
+        "payload.value.energies.4.value": null,
+        "payload.value.energies.4.valid": false
+      }
+    },
+    {
+      "name": "读取日期",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068910834343337393C38597416",
+      "expected": {
+        "payload.di": "04000101",
+        "payload.value": "20260509"
+      }
+    },
+    {
+      "name": "读取时间",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "68643798000000689107353433374936433016",
+      "expected": {
+        "payload.di": "04000102",
+        "payload.value": "100316"
+      }
+    },
+    {
+      "name": "上一次日冻结正向有功电能",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068911834343938B4387433333333335A5A443333C55A3386B934333A16",
+      "expected": {
+        "payload.di": "05060101",
+        "payload.value": [4105.81, 0, 1127.27, 2792, 186.53]
+      }
+    },
+    {
+      "name": "上一次日冻结反向有功电能",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "686437980000006891183435393833333333333333333333333333333333333333338216",
+      "expected": {
+        "payload.di": "05060201",
+        "payload.value": [0, 0, 0, 0, 0]
+      }
+    },
+    {
+      "name": "上一结算月正向有功总电能",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "686437980000006891083433343364357433AA16",
+      "expected": {
+        "payload.di": "00010001",
+        "payload.value": [4102.31]
+      }
+    },
+    {
+      "name": "上一结算月反向有功总电能",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068910834333533333333333716",
+      "expected": {
+        "payload.di": "00020001",
+        "payload.value": [0]
+      }
+    },
+    {
+      "name": "瞬时总有功功率",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068910733333635859339BD16",
+      "expected": {
+        "payload.di": "02030000",
+        "payload.value": 66052
+      }
+    },
+    {
+      "name": "总功率因数",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "68643798000000689106333339353343E416",
+      "expected": {
+        "payload.di": "02060000",
+        "payload.value": 1000
+      }
+    },
+    {
+      "name": "A 相电压",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "6864379800000068910633343435CC548A16",
+      "expected": {
+        "payload.di": "02010100",
+        "payload.value": 219902
+      }
+    },
+    {
+      "name": "A 相电流负载读数",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "68643798000000689107333435357333364816",
+      "expected": {
+        "payload.di": "02020100",
+        "payload.value": 30040
+      }
+    },
+    {
+      "name": "电表运行状态字 1",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "68643798000000689106343833373F33E216",
+      "expected": {
+        "payload.di": "04000501",
+        "payload.value.rawValue": 12,
+        "payload.value.binary": "0000000000001100",
+        "payload.value.bits.bit2": 1,
+        "payload.value.bits.bit3": 1
+      }
+    },
+    {
+      "name": "时钟电池电压",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "686437980000006891063B33B33535335816",
+      "expected": {
+        "payload.di": "02800008",
+        "payload.value.rawValue": 2,
+        "payload.value.voltage": 0.02,
+        "payload.value.unit": "V"
+      }
+    },
+    {
+      "name": "时钟电池工作时间",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "686437980000006891083D33B335BBC56B331216",
+      "expected": {
+        "payload.di": "0280000A",
+        "payload.value": 389288
+      }
+    },
+    {
+      "name": "电表运行状态字 3",
+      "sourceLog": "M_1500001010700009837640_28.log",
+      "frame": "68643798000000689106363833373333D816",
+      "expected": {
+        "payload.di": "04000503",
+        "payload.value.rawValue": 0,
+        "payload.value.binary": "0000000000000000"
+      }
+    }
+  ]
+}

@@ -8,13 +8,16 @@ This file contains guidelines and commands for agentic coding agents working in 
 ## Build/Test/Lint Commands
 
 ### Current Commands
-- `npm test` - Currently shows "Error: no test specified" (placeholder)
+- `npm test` - Regression gate: runs protocol fixtures, full log corpora, negative and roundtrip suites; exits non-zero on any failure
+- `npm run test:protocol` - Only the protocol fixture + type-sample suite (`test/protocol-regression.js`)
+- `npm run test:negative` - Only the malformed-input robustness suite (`test/negative-regression.js`)
+- `npm run test:roundtrip` - Only the encode→decode roundtrip suite (`test/roundtrip-regression.js`)
 - No build, lint, or typecheck commands are currently configured
+- Sample builder scripts (`scripts/build-*-type-samples.js`) are local-only and gitignored; committed sample fixtures live in `test/fixtures/`
 
 ### Testing
-- Use `node test.js` to run the manual test file
-- Test file located at: `test.js`
-- For single test execution, run `node -e "require('./test.js')"`
+- Regression tests live in `test/`; `test/README.md` documents layers, fixtures and baseline rules
+- CI (`.github/workflows/test.yml`) runs `npm test` on push/PR across Node 16/18/20/22
 
 ### Development
 - No build process required (Node-RED nodes load directly)
@@ -121,7 +124,7 @@ module.exports = function (RED) {
 
 ## Development Workflow
 1. Modify protocol implementation files as needed
-2. Test with `node test.js` or via Node-RED flow editor
+2. Run `npm test` (mandatory before commit); use the Node-RED flow editor for interactive checks
 3. Ensure all nodes follow the standard module pattern
 4. Verify HTML definitions match JavaScript node registrations
 5. Test message processing with sample data

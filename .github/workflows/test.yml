@@ -1,0 +1,21 @@
+name: 回归测试
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  regression:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        node-version: [16, 18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node-version }}
+      # 项目零运行时依赖，无需 npm ci，直接跑回归门禁
+      - name: 协议 / 负例 / 往返回归
+        run: npm test

@@ -657,13 +657,83 @@ function parseDailyFreezeRecord(dataBuffer, oad = '50040200') {
     const title = (oad === '50040200') ? '日冻结' : (oad === '50050200' ? '结算日冻结' : '冻结数据');
     const result = createStandardResult(title, oad, dataBuffer);
 
-    // 快速探测：长度至少包含时间戳(8B) + 计数(1B) + 至少1个 0x06 +4B 数值
-    if (!dataBuffer || dataBuffer.length < 14) {
+    if (!dataBuffer || dataBuffer.length < 8) {
         setErrorResult(result, '数据长度不足，无法解析日冻结记录');
         return result;
     }
 
-    // 前 8 字节时间戳，此处只保留原始值，不做解析
+    // 标准 GET-Response-Record 数据：RCSD + 记录行数 + A-XDR 行数据。
+    // 现场报文示例：
+    // 01 00 00100200 | 01 | 01 05 | 06xxxxxxxx ...
+    // RCSD(1个普通OAD)  行数  array(5项)  double-long-unsigned
+    let standardLayoutRecognized = false;
+    try {
+        let cursor = 0;
+        const rcsdCountInfo = readAxdrLength(dataBuffer, cursor);
+        cursor += rcsdCountInfo.size;
+        for (let i = 0; i < rcsdCountInfo.len; i++) {
+            const csd = parseCsdBytes(dataBuffer, cursor);
+            cursor += csd.consumed;
+        }
+
+        ensureAxdrBytes(dataBuffer, cursor, 1, 'A-ResultRecord');
+        standardLayoutRecognized = true;
+        const recordChoice = dataBuffer[cursor++];
+        if (recordChoice !== 0x01) {
+            if (recordChoice === 0x00 && cursor < dataBuffer.length) {
+                throw new Error(`冻结记录读取失败，DAR=0x${dataBuffer[cursor].toString(16).padStart(2, '0')}`);
+            }
+            throw new Error(`不支持的A-ResultRecord选择: 0x${recordChoice.toString(16).padStart(2, '0')}`);
+        }
+
+        const rowCountInfo = readAxdrLength(dataBuffer, cursor);
+        cursor += rowCountInfo.size;
+        if (rowCountInfo.len === 0) {
+            throw new Error('冻结记录为空');
+        }
+        const rawValues = [];
+
+        for (let i = 0; i < rowCountInfo.len; i++) {
+            const parsedRow = enhancedParseData(dataBuffer.slice(cursor), oad.slice(0, 4), oad.slice(4, 6));
+            if (parsedRow.consumed <= 0 || parsedRow.result.error) {
+                throw new Error(parsedRow.result.error || `第${i + 1}行未消费数据`);
+            }
+            cursor += parsedRow.consumed;
+
+            const items = Array.isArray(parsedRow.result.parsedValue)
+                ? parsedRow.result.parsedValue
+                : [parsedRow.result];
+            items.forEach(item => {
+                const value = Number(item?.parsedValue);
+                if (Number.isFinite(value)) rawValues.push(value);
+            });
+        }
+        if (rawValues.length === 0) {
+            throw new Error('冻结记录中没有有效业务值');
+        }
+
+        const { valueArray, detailed } = formatFreezeValues(rawValues, { scale: -2, unit: 'kWh' });
+        result.value = valueArray;
+        setSuccessResult(result, detailed, {
+            unit: 'kWh',
+            scale: -2,
+            count: detailed.length,
+            generic: {
+                // 保留既有字段，避免旧业务依赖该原始片段时发生兼容性变化。
+                timeRaw: dataBuffer.slice(0, Math.min(8, dataBuffer.length)).toString('hex').toUpperCase(),
+                // 旧实现从固定偏移10开始保留该字段；继续维持其内容，正确解析结果放在 value/data 中。
+                trailingHex: (dataBuffer.length > 10) ? dataBuffer.slice(10).toString('hex').toUpperCase() : null
+            }
+        });
+        return result;
+    } catch (standardError) {
+        if (standardLayoutRecognized) {
+            setErrorResult(result, standardError.message);
+            return result;
+        }
+        // 兼容旧设备的非标准结构：8字节前缀 + 数值个数 + 0x06/4B 数值。
+    }
+
     const timeRaw = dataBuffer.slice(0, 8);
 
     const count = dataBuffer[8];
@@ -677,6 +747,11 @@ function parseDailyFreezeRecord(dataBuffer, oad = '50040200') {
         cursor += 4;
         const val = rawVal.readUInt32BE(0);
         items.push(val);
+    }
+
+    if (items.length === 0) {
+        setErrorResult(result, '非标准冻结记录中没有有效业务值');
+        return result;
     }
 
     const { valueArray, detailed } = formatFreezeValues(items, { scale: -2, unit: 'kWh' });
@@ -726,6 +801,11 @@ function detectAndValidateFrame(buffer) {
                 throw new Error(`FCS校验失败: 计算=0x${calculatedFcs.toString(16)}, 接收=0x${receivedFcs.toString(16)}`);
             }
 
+            // 校验和通过但长度域与帧长不符：视为无效帧直接拒绝。
+            if (declaredLength !== expectedLength) {
+                throw new Error(`帧长度域不匹配: 声明=${declaredLength}, 实际=${expectedLength}`);
+            }
+
             const saBytes = buffer.slice(saFlagIndex + 1, serverAddrEnd);
             const caBytes = buffer.slice(serverAddrEnd, caEnd);
 
@@ -757,6 +837,10 @@ function detectAndValidateFrame(buffer) {
             const calculatedFcs = crc16X25(dataForFcs);
             const receivedFcs = buffer.readUInt16LE(fcsStart);
             if (calculatedFcs === receivedFcs) {
+                // 与结构化路径一致：长度域不符即拒绝
+                if (declaredLength !== expectedLength) {
+                    throw new Error(`帧长度域不匹配: 声明=${declaredLength}, 实际=${expectedLength}`);
+                }
                 return {
                     apduStart: hcsStart + 2,
                     fcsStart,
@@ -3155,10 +3239,15 @@ function decideMode(msg) {
 // 处理消息
 // let mode = 'unknown';
 function batchMsg(_msg, mode) {
+    // 批量数组中可能含 null/undefined 空元素；在 try 外读取 _msg.payload 会抛异常
+    // 并拖垮整个批次，必须先判空、让空元素原样通过
+    if (!_msg) return _msg;
+
     // 在 try 外预声明，避免 catch 中未定义
 
     let _pdata = _msg.payload;
-    let _tag = _pdata.tag || ''
+    // payload 可能是 undefined/null/基本类型，取 tag 前必须先判空，否则会在 try 之外抛异常
+    let _tag = (_pdata && _pdata.tag) || '';
     try {
         // mode = //decideMode(_msg);
 

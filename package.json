@@ -4,7 +4,10 @@
   "description": "node-red zelecproto node",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node test/protocol-regression.js && node test/negative-regression.js && node test/roundtrip-regression.js",
+    "test:protocol": "node test/protocol-regression.js",
+    "test:negative": "node test/negative-regression.js",
+    "test:roundtrip": "node test/roundtrip-regression.js"
   },
   "repository": {
     "type": "git",

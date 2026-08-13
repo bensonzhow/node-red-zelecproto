@@ -1,0 +1,424 @@
+{
+  "description": "2026-08-11 电表整体测试日志中已成功业务的 DL/T 698.45 回归样本；日志中无样本的 SET/ACTION/CONNECT-Response 使用按解析器格式构造的合成帧（sourceLog 标注为 synthetic，HCS/FCS 由独立实现的 CRC-16/X-25 计算）",
+  "encodeCases": [
+    {
+      "name": "广播读取电表地址",
+      "input": {
+        "mode": "encode",
+        "payload": {
+          "oadHex": "40010200",
+          "sa": "AAAAAAAAAAAA",
+          "saType": 1,
+          "piid": 0,
+          "security": "none"
+        }
+      },
+      "expectedFrame": "FEFEFEFE6817004345AAAAAAAAAAAA11534E0501004001020000ED0316"
+    },
+    {
+      "name": "安全明文随机数读取正向有功电能",
+      "input": {
+        "mode": "encode",
+        "payload": {
+          "oadHex": "00100200",
+          "sa": "613646030090",
+          "security": "plain_rn",
+          "rnHex": "01234567891234560123456789123456"
+        }
+      },
+      "expectedFrame": "FEFEFEFE682C00430561364603009011FC8B1000080501010010020000011001234567891234560123456789123456473A16"
+    }
+  ],
+  "decodeCases": [
+    {
+      "name": "读取电表地址",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682100C30591959032000011106E850100400102000109060000329095910000F48516",
+      "expected": {
+        "decoding_details.unifiedFormat.type": "GET-Response",
+        "decoding_details.unifiedFormat.oad": "40010200",
+        "payload.dataType": "电表地址",
+        "payload.value": "000032909591"
+      }
+    },
+    {
+      "name": "液晶电能小数位数",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682500C30591959032000011453090000C850101400702050111020000010004148330B3D0A116",
+      "expected": {
+        "decoding_details.unifiedFormat.type": "SECURITY-Response",
+        "decoding_details.unifiedFormat.oad": "40070205",
+        "payload.dataType": "液晶小数位数属性a",
+        "payload.value": 2
+      }
+    },
+    {
+      "name": "读取电表型号",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "684500C30591959032000011CA1F90002C850101410B0200010A2044445A59393539392D5A00000000000000000000000000000000000000000000000001000455175B93868116",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "410B0200",
+        "payload.dataType": "电表型号"
+      },
+      "startsWith": {
+        "payload.value": "DDZY9599-Z"
+      }
+    },
+    {
+      "name": "读取有功脉冲常数",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682800C305919590320000112B8790000F850101410902000106000004B000000100046CB9D601D64316",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "41090200",
+        "payload.dataType": "脉冲常数",
+        "payload.value": 1200
+      }
+    },
+    {
+      "name": "无功脉冲常数对象不存在",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682400C30591959032000011D46590000B850101410A020000060000010004BCA77A7C1DD316",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "410A0200",
+        "decoding_details.unifiedFormat.status": "失败",
+        "decoding_details.unifiedFormat.error.name": "对象不存在",
+        "decoding_details.unifiedFormat.error.code": 6
+      }
+    },
+    {
+      "name": "当前组合有功电能",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "683E00C30591959032000011190390002585010100000200010105050033F16A05000024FC050000B0B8050005D7AE05002D44060000010004E6EE5706085D16",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "00000200",
+        "payload.dataType": "电能数据",
+        "payload.value": [34041.38, 94.68, 452.4, 3828.94, 29665.34]
+      }
+    },
+    {
+      "name": "当前正向有功电能",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "683E00C30591959032000011190390002585010100100200010105060033F16A06000024FC060000B0B8060005D7AE06002D44060000010004B7553D5822D516",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "00100200",
+        "payload.dataType": "电能数据",
+        "payload.value": [34041.38, 94.68, 452.4, 3828.94, 29665.34]
+      }
+    },
+    {
+      "name": "当前反向有功电能",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "683E00C3059195903200001119039000258501010020020001010506000000000600000000060000000006000000000600000000000001000464B6B030BAD716",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "00200200",
+        "payload.dataType": "电能数据",
+        "payload.value": [0, 0, 0, 0, 0]
+      }
+    },
+    {
+      "name": "A 相电压",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682800C305919590320000112B8790000F8501012000020001010112089600000100045C36D6B01ABD16",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "20000200",
+        "payload.dataType": "电压电流测量数据",
+        "payload.value": [219.8],
+        "payload.data.0.unit": "V"
+      }
+    },
+    {
+      "name": "A 相电流",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682A00C30591959032000011092C90001185010120010200010101050000059000000100045F3E4D19575A16",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "20010200",
+        "payload.dataType": "电压电流测量数据",
+        "payload.value": [1.424],
+        "payload.data.0.unit": "A"
+      }
+    },
+    {
+      "name": "总及 A 相有功功率",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682F00C30591959032000011CD2790001685010120040200010102050001020805000102080000010004DF1FACA61AA116",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "20040200",
+        "payload.dataType": "有功功率",
+        "payload.value": [6605.6, 6605.6]
+      }
+    },
+    {
+      "name": "总及 A 相功率因数",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682B00C305919590320000119879900012850101200A02000101021003E81003E80000010004781C58984DC416",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "200A0200",
+        "payload.dataType": "功率因数",
+        "payload.value.0.parsedValue": 1000,
+        "payload.value.1.parsedValue": 1000
+      }
+    },
+    {
+      "name": "电表时钟",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682100C30591959032000011106E85010140000200011C07EA080B0D331600004A5F16",
+      "expected": {
+        "decoding_details.unifiedFormat.type": "GET-Response",
+        "decoding_details.unifiedFormat.oad": "40000200",
+        "payload.dataType": "电表时钟",
+        "payload.value": "2026-08-11 13:51:22"
+      }
+    },
+    {
+      "name": "时钟电池电压",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682600C30591959032000011F6CE90000D85010120110200011201700000010004B1844B8D33AE16",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "20110200",
+        "payload.dataType": "时钟电池电压",
+        "payload.value.rawValue": 368,
+        "payload.value.voltage": 3.68
+      }
+    },
+    {
+      "name": "时钟电池工作时间",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682800C305919590320000112B8790000F85010120130200010600133F0500000100047C574F222A2416",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "20130200",
+        "payload.dataType": "时钟电池工作时间",
+        "payload.value": 1261317
+      }
+    },
+    {
+      "name": "电表运行状态字 1",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682700C30591959032000011679B90000E8501012014020101041000000000010004E0A82E60120C16",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "20140201",
+        "payload.dataType": "电表状态",
+        "payload.value.statusWordHex": "0000",
+        "payload.value.binary": "0000000000000000"
+      }
+    },
+    {
+      "name": "电表运行状态字 3",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682700C30591959032000011679B90000E85010120140203010410000000000100043554F5C0673D16",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "20140203",
+        "payload.dataType": "电表运行状态字3",
+        "payload.value.statusWordHex": "0000"
+      }
+    },
+    {
+      "name": "掉电事件当前记录数",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "683400C30591959032000011911490001B850101301107000101010202000202060000002706045A4E280000010004E3C2EB8B09AC16",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "30110700",
+        "payload.dataType": "电能表掉电事件-当前记录数",
+        "payload.value": 39
+      }
+    },
+    {
+      "name": "上一次掉电事件",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "685500C305919590320000118F6E90003C8503013011020005002022020000201E0200002020020000202402000033000200010106000000261C07EA080B0A29111C07EA080B0D320900000000010004E9B389AB323516",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "30110200",
+        "payload.dataType": "上一次掉电事件",
+        "payload.value.sequence": 38,
+        "payload.value.startTime": "2026-08-11 10:41:17",
+        "payload.value.endTime": "2026-08-11 13:50:09"
+      }
+    },
+    {
+      "name": "电表清零事件当前记录数",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682600C30591959032000011F6CE90000D8501013013040001120001000001000450589CCC079F16",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "30130400",
+        "payload.dataType": "电表清零事件当前记录数",
+        "payload.value": 1
+      }
+    },
+    {
+      "name": "上一次电表清零事件",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "686200C30591959032000011A65D9000498503013013020007002022020000201E020000202002000020240200003300020000001022010000202201010106000000001C07E3091B0D3604000000060000007F06000000000000010004365AC1E9A75B16",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "30130200",
+        "payload.dataType": "电表清零事件记录",
+        "payload.value.hasRecord": true,
+        "payload.value.eventTime": "2019-09-27 13:54:04"
+      }
+    },
+    {
+      "name": "开表盖事件当前记录数",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682600C30591959032000011F6CE90000D850101301B0400011200000000010004323D2159B43616",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "301B0400",
+        "payload.dataType": "开表盖事件当前记录数",
+        "payload.value": 0
+      }
+    },
+    {
+      "name": "上一次开表盖事件",
+      "sourceLog": "M_1540001019000020358261_31.log",
+      "frame": "687D00C305265803020090113AE3900064850301301B020009002022020000201E02000020200200002024020000330002000000102201000020220100001082010000208201010106000000001C07EA06190F28081C07EA06190F2809000006000C9351060000000006000C93510600000000000001000489C9EFCF676316",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "301B0200",
+        "payload.dataType": "上一次开盖事件记录",
+        "payload.value.startTime": "2026-06-25 15:40:08",
+        "payload.value.endTime": "2026-06-25 15:40:09",
+        "payload.value.beforeForwardActive": 8241.45,
+        "payload.value.afterForwardActive": 8241.45
+      }
+    },
+    {
+      "name": "电源异常事件累计次数",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682E00C305919590320000115C72900015850101302C070101020200020206000000000000000100040ECA4E2C99B816",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "302C0701",
+        "payload.dataType": "电源异常事件累计统计",
+        "payload.value": 0
+      }
+    },
+    {
+      "name": "计量芯片故障事件累计次数",
+      "sourceLog": "M_1540001019000012626507_6.log",
+      "frame": "682E00C30550262601009011E377900015850101302F070101020200020206000000000000000100047A65F0764D6516",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "302F0701",
+        "payload.dataType": "计量芯片故障事件累计统计",
+        "payload.value": 0
+      }
+    },
+    {
+      "name": "上一次计量芯片故障事件",
+      "sourceLog": "M_1540001019000013168471_5.log",
+      "frame": "686200C305476831010090112795900049850301302F020007002022020000201E020000202002000020240200003300020000001022010000202201010106000000001C07EA01000C320100000006000B67F606000000000000010004701B1D1B950716",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "302F0200",
+        "payload.dataType": "上一次计量芯片故障事件",
+        "payload.value.eventName": "计量芯片故障事件",
+        "payload.value.hasRecord": true,
+        "payload.value.startTime": "2026-01-00 12:50:01"
+      }
+    },
+    {
+      "name": "负荷开关误动作事件累计次数",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "682E00C305919590320000115C72900015850101302B07010102020002020600000000000000010004B3268D80E1F916",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "302B0701",
+        "payload.dataType": "负荷开关误动作事件累计统计",
+        "payload.value": 0
+      }
+    },
+    {
+      "name": "上一次负荷开关误动作事件",
+      "sourceLog": "M_1540001019000036043991_18.log",
+      "frame": "689100C30599436003009011A33A900078850301302B02000A002022020000201E020000202002000020240200003300020000F20522010000102201000020220100001082010000208201010106000000001C07E909070C002B1C07E9090B060C11000002040A0552454C4159160016001600060001DF4B0600000000060001DF4B060000000000000100044475ECDE3CF716",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "302B0200",
+        "payload.dataType": "上一次负荷开关误动作事件",
+        "payload.value.eventName": "负荷开关误动作事件",
+        "payload.value.relayUnit.deviceDescription": "RELAY",
+        "payload.value.switchStateName": "输出",
+        "payload.value.startForwardActive": 1226.99
+      }
+    },
+    {
+      "name": "日冻结响应结构",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "684500C30591959032000011CA1F90002C8503015004020001000010020001010105060033F16A06000024FC060000B0B8060005D7AE06002D44060000010004097910930C9616",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "50040200",
+        "payload.dataType": "日冻结",
+        "payload.success": true,
+        "payload.metadata.count": 5,
+        "payload.value": [34041.38, 94.68, 452.4, 3828.94, 29665.34],
+        "payload.raw.generic.timeRaw": "0100001002000101"
+      }
+    },
+    {
+      "name": "上一次日冻结正向有功电能数据",
+      "sourceLog": "2026-08-13 现场报文",
+      "frame": "684500C305204307001519119D0890002C850301500402000100001002000101010506001DAE30060000000006001A63F306000000000600034A3D000001000427C47BF722DA16",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "50040200",
+        "payload.dataType": "日冻结",
+        "payload.success": true,
+        "payload.metadata.count": 5,
+        "payload.value": [19451.36, 0, 17295.23, 0, 2156.13]
+      }
+    },
+    {
+      "name": "结算日冻结响应结构",
+      "sourceLog": "M_1540001011500329095914_2.log",
+      "frame": "684500C30591959032000011CA1F90002C8503015005020001000010020001010105060033F16A06000024FC060000B0B8060005D7AE06002D4406000001000401B0857F68A916",
+      "expected": {
+        "decoding_details.unifiedFormat.oad": "50050200",
+        "payload.dataType": "结算日冻结",
+        "payload.success": true,
+        "payload.metadata.count": 5,
+        "payload.value": [34041.38, 94.68, 452.4, 3828.94, 29665.34],
+        "payload.raw.generic.timeRaw": "0100001002000101"
+      }
+    },
+    {
+      "name": "SET-Response 正常成功",
+      "sourceLog": "synthetic",
+      "frame": "681700C30591959032000011A8088601014001020000F44616",
+      "expected": {
+        "decoding_details.unifiedFormat.type": "SET-Response",
+        "decoding_details.unifiedFormat.invokeId": 1,
+        "decoding_details.unifiedFormat.oad": "40010200",
+        "decoding_details.unifiedFormat.status": "成功",
+        "decoding_details.unifiedFormat.error": null
+      }
+    },
+    {
+      "name": "SET-Response 正常失败",
+      "sourceLog": "synthetic",
+      "frame": "681700C30591959032000011A808860201410A020002D90616",
+      "expected": {
+        "decoding_details.unifiedFormat.type": "SET-Response",
+        "decoding_details.unifiedFormat.status": "失败",
+        "decoding_details.unifiedFormat.error.name": "暂时失效",
+        "decoding_details.unifiedFormat.error.code": 2
+      }
+    },
+    {
+      "name": "ACTION-Response 正常成功",
+      "sourceLog": "synthetic",
+      "frame": "681800C30591959032000011E414870301F30004000000D68916",
+      "expected": {
+        "decoding_details.unifiedFormat.type": "ACTION-Response",
+        "decoding_details.unifiedFormat.invokeId": 3,
+        "decoding_details.unifiedFormat.omd": "F3000400",
+        "decoding_details.unifiedFormat.status": "成功",
+        "decoding_details.unifiedFormat.error": null
+      }
+    },
+    {
+      "name": "CONNECT-Response",
+      "sourceLog": "synthetic",
+      "frame": "685600C305919590320000113C908204AABBCCDD010203042026081200000A0B0C0D202501010000000000000000000001000102030405060708000000000000000000000000000000000400040001FF030000003CCDAE16",
+      "expected": {
+        "decoding_details.unifiedFormat.type": "CONNECT-Response",
+        "decoding_details.unifiedFormat.invokeId": 4,
+        "decoding_details.unifiedFormat.factoryInfo.factoryCode": "AABBCCDD",
+        "decoding_details.unifiedFormat.appVersion": "0100",
+        "decoding_details.unifiedFormat.serverSendSize": 1024,
+        "decoding_details.unifiedFormat.serverRecvSize": 1024,
+        "decoding_details.unifiedFormat.expectConnectTimeout": 60,
+        "decoding_details.unifiedFormat.connectionResult": null
+      }
+    }
+  ]
+}
