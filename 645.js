@@ -508,8 +508,8 @@ function decode645(_msg) {
             value = bytesToIntBE(arrPush.slice(-4).reverse());
         }
         else if (di === '040005FF' && arrPush.length >= 6) {
-            // 运行状态数据块：常见为 2+2+2+4 = 10字节（状态字1/2/3 + 密钥状态字）
-            // 也有表只回部分：例如只回 1/2/3（6字节），或 1/2/3/8 之外还带厂商私有扩展。
+            // 运行状态数据块：状态字1～7各2字节，随后为4字节密钥状态字，共18字节。
+            // 对不足18字节的非标准响应仍按实际长度解析，避免越界。
             const data = arrPush.slice(4); // 去掉DI
             const statusBlockHex = Buffer.from(data).toString("hex").toUpperCase();
             let off = 0;
@@ -537,15 +537,17 @@ function decode645(_msg) {
             const w1 = readU16LE();
             const word1 = (w1 === null) ? null : {
                 rawValue: w1,
+                statusWordHex: w1.toString(16).toUpperCase().padStart(4, '0'),
                 rawBlockHex: statusBlockHex,
                 binary: bin16(w1),
                 bits: expandBits16(w1)
             };
 
-            // 状态字2/3只保留原始数值和binary，具体位义由上层业务或文档表解释。
+            // 状态字2～7保留原始数值和binary，具体位义由上层业务或文档表解释。
             const w2 = readU16LE();
             const word2 = (w2 === null) ? null : {
                 rawValue: w2,
+                statusWordHex: w2.toString(16).toUpperCase().padStart(4, '0'),
                 binary: bin16(w2),
                 bits: expandBits16(w2)
             };
@@ -553,8 +555,41 @@ function decode645(_msg) {
             const w3 = readU16LE();
             const word3 = (w3 === null) ? null : {
                 rawValue: w3,
+                statusWordHex: w3.toString(16).toUpperCase().padStart(4, '0'),
                 binary: bin16(w3),
                 bits: expandBits16(w3)
+            };
+
+            const w4 = readU16LE();
+            const word4 = (w4 === null) ? null : {
+                rawValue: w4,
+                statusWordHex: w4.toString(16).toUpperCase().padStart(4, '0'),
+                binary: bin16(w4),
+                bits: expandBits16(w4)
+            };
+
+            const w5 = readU16LE();
+            const word5 = (w5 === null) ? null : {
+                rawValue: w5,
+                statusWordHex: w5.toString(16).toUpperCase().padStart(4, '0'),
+                binary: bin16(w5),
+                bits: expandBits16(w5)
+            };
+
+            const w6 = readU16LE();
+            const word6 = (w6 === null) ? null : {
+                rawValue: w6,
+                statusWordHex: w6.toString(16).toUpperCase().padStart(4, '0'),
+                binary: bin16(w6),
+                bits: expandBits16(w6)
+            };
+
+            const w7 = readU16LE();
+            const word7 = (w7 === null) ? null : {
+                rawValue: w7,
+                statusWordHex: w7.toString(16).toUpperCase().padStart(4, '0'),
+                binary: bin16(w7),
+                bits: expandBits16(w7)
             };
 
             // —— 密钥状态字（与你现有的 04000508 保持一致，32位）——
@@ -562,6 +597,7 @@ function decode645(_msg) {
             const word8 = (w8 === null) ? null : {
                 rawValue: w8,
                 hexValue: w8.toString(16).toUpperCase().padStart(8, '0'),
+                statusWordHex: w8.toString(16).toUpperCase().padStart(8, '0'),
                 binary: bin32(w8),
                 bits: expandBits32(w8),
                 keys: {
@@ -576,10 +612,25 @@ function decode645(_msg) {
                 }
             };
 
-            const out = { word1, word2, word3, word8 };
-            if (left() > 0) {
-                out.extraRaw = bytesToHex(data.slice(off)).replace(/\s+/g, ''); // 厂商私有扩展原样保留
+            // words按报文顺序收集状态字1～7、密钥状态字和厂商扩展状态字。
+            const words = [word1, word2, word3, word4, word5, word6, word7, word8]
+                .filter((word) => word !== null);
+            const extraRaw = left() > 0
+                ? bytesToHex(data.slice(off)).replace(/\s+/g, '')
+                : null;
+            while (left() >= 2) {
+                const extraValue = readU16LE();
+                words.push({
+                    rawValue: extraValue,
+                    statusWordHex: extraValue.toString(16).toUpperCase().padStart(4, '0'),
+                    binary: bin16(extraValue),
+                    bits: expandBits16(extraValue)
+                });
             }
+
+            const out = { word1, word2, word3, word4, word5, word6, word7, word8, words };
+            if (extraRaw !== null) out.extraRaw = extraRaw; // 厂商私有扩展原样保留
+            if (left() > 0) out.trailingRaw = bytesToHex(data.slice(off)).replace(/\s+/g, '');
             value = out;
         }
 

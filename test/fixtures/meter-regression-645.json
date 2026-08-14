@@ -348,6 +348,62 @@
       }
     },
     {
+      "name": "全部电表运行状态字",
+      "frame": "68000000000000689116323833373435363738393A3B3C3D3E3F4041424344458C16",
+      "expected": {
+        "payload.di": "040005FF",
+        "payload.value.words.length": 8,
+        "payload.value.words.0.rawValue": 513,
+        "payload.value.words.1.rawValue": 1027,
+        "payload.value.words.2.rawValue": 1541,
+        "payload.value.words.3.rawValue": 2055,
+        "payload.value.words.4.rawValue": 2569,
+        "payload.value.words.5.rawValue": 3083,
+        "payload.value.words.6.rawValue": 3597,
+        "payload.value.word8.hexValue": "1211100F"
+      }
+    },
+    {
+      "name": "全部电表运行状态字含扩展数据 1",
+      "frame": "68431927401400689120323833373F33333333B5333333333333333733333333333333333333333333335216",
+      "expected": {
+        "payload.di": "040005FF",
+        "payload.value.words.length": 13,
+        "payload.value.words.0.rawValue": 12,
+        "payload.value.words.0.statusWordHex": "000C",
+        "payload.value.words.2.rawValue": 33280,
+        "payload.value.words.2.statusWordHex": "8200",
+        "payload.value.words.6.rawValue": 1024,
+        "payload.value.words.6.statusWordHex": "0400",
+        "payload.value.words.7.rawValue": 0,
+        "payload.value.words.7.statusWordHex": "00000000",
+        "payload.value.words.12.rawValue": 0,
+        "payload.value.words.12.statusWordHex": "0000",
+        "payload.value.extraRaw": "00000000000000000000"
+      }
+    },
+    {
+      "name": "全部电表运行状态字含扩展数据 2",
+      "frame": "68546828401400689120323833373333333333B536333333333337373333333333333333333333333333AE16",
+      "expected": {
+        "payload.di": "040005FF",
+        "payload.value.words.length": 13,
+        "payload.value.words.0.rawValue": 0,
+        "payload.value.words.0.statusWordHex": "0000",
+        "payload.value.words.2.rawValue": 33280,
+        "payload.value.words.2.statusWordHex": "8200",
+        "payload.value.words.3.rawValue": 3,
+        "payload.value.words.3.statusWordHex": "0003",
+        "payload.value.words.6.rawValue": 1028,
+        "payload.value.words.6.statusWordHex": "0404",
+        "payload.value.words.7.rawValue": 0,
+        "payload.value.words.7.statusWordHex": "00000000",
+        "payload.value.words.12.rawValue": 0,
+        "payload.value.words.12.statusWordHex": "0000",
+        "payload.value.extraRaw": "00000000000000000000"
+      }
+    },
+    {
       "name": "时钟电池电压",
       "sourceLog": "M_1500001010700009837640_28.log",
       "frame": "686437980000006891063B33B33535335816",
