@@ -1071,11 +1071,13 @@ function parseMeterResetRecord645(arrPush, di) {
                 valid = false;
             }
         }
+        const value = valid ? rawValue / 100 : null;
 
         return {
             key,
             label,
-            value: valid ? rawValue / 100 : null,
+            value,
+            ...(valid ? { formattedValue: value.toFixed(2) } : {}),
             unit,
             scale: -2,
             valid,
@@ -1122,7 +1124,17 @@ function parseCoverOpenLast645(arrPush) {
         const segment = data.slice(12 + index * 4, 16 + index * 4);
         const valid = !segment.every(b => b === 0xFF) && segment.every(b => ((b >> 4) & 0x0F) <= 9 && (b & 0x0F) <= 9);
         const rawValue = valid ? bcdLEToInt(segment) : null;
-        return { key, label, value: valid ? rawValue / 100 : null, unit, scale: -2, valid, rawBCD: bytesToHex(segment).replace(/\s+/g, '') };
+        const value = valid ? rawValue / 100 : null;
+        return {
+            key,
+            label,
+            value,
+            ...(valid ? { formattedValue: value.toFixed(2) } : {}),
+            unit,
+            scale: -2,
+            valid,
+            rawBCD: bytesToHex(segment).replace(/\s+/g, '')
+        };
     });
     const valueOf = key => energies.find(item => item.key === key)?.value ?? null;
 
@@ -1186,10 +1198,12 @@ function parseLast645StandardEventRecord(arrPush, di) {
         offset += 4;
         const valid = !segment.every(b => b === 0xFF) && segment.every(b => ((b >> 4) & 0x0F) <= 9 && (b & 0x0F) <= 9);
         const rawValue = valid ? bcdLEToInt(segment) : null;
+        const value = valid ? rawValue / 100 : null;
         return {
             key,
             label,
-            value: valid ? rawValue / 100 : null,
+            value,
+            formattedValue: value === null ? null : value.toFixed(2),
             rawValue,
             unit: 'kWh',
             scale: -2,

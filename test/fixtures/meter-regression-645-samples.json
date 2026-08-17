@@ -1253,6 +1253,7 @@
             {
               "key": "totalForwardActive",
               "label": "清零前正向有功总电能",
+              "formattedValue": "0.81",
               "rawBCD": "81000000",
               "scale": -2,
               "unit": "kWh",
@@ -1262,6 +1263,7 @@
             {
               "key": "totalReverseActive",
               "label": "清零前反向有功总电能",
+              "formattedValue": "0.00",
               "rawBCD": "00000000",
               "scale": -2,
               "unit": "kWh",

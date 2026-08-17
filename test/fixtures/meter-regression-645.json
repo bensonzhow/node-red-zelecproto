@@ -131,7 +131,10 @@
         "payload.value.type": "meter_reset_record",
         "payload.value.hasRecord": true,
         "payload.value.eventTime": "2016-01-26 15:24:59",
-        "payload.value.energies.0.value": 0.37
+        "payload.value.energies.0.value": 0.37,
+        "payload.value.energies.0.formattedValue": "0.37",
+        "payload.value.energies.1.value": 0,
+        "payload.value.energies.1.formattedValue": "0.00"
       }
     },
     {
@@ -195,6 +198,28 @@
       }
     },
     {
+      "name": "上一次负荷开关误动作事件实际报文含动作后状态",
+      "sourceLog": "test.js",
+      "frame": "6842970250000068912134336936588736633A546C8836633A5433B76C453398333333B76C4533983333339F16",
+      "expected": {
+        "payload.ok": true,
+        "payload.di": "03360001",
+        "payload.value.startTime": "2021-07-30 03:54:25",
+        "payload.value.endTime": "2021-07-30 03:55:39",
+        "payload.value.switchState": 0,
+        "payload.value.switchStateName": "通",
+        "payload.value.associatedData.length": 4,
+        "payload.value.associatedData.0.formattedValue": "1239.84",
+        "payload.value.associatedData.1.formattedValue": "0.65",
+        "payload.value.associatedData.2.formattedValue": "1239.84",
+        "payload.value.associatedData.3.formattedValue": "0.65",
+        "payload.value.startForwardActive": 1239.84,
+        "payload.value.startReverseActive": 0.65,
+        "payload.value.endForwardActive": 1239.84,
+        "payload.value.endReverseActive": 0.65
+      }
+    },
+    {
       "name": "上一次电源异常事件",
       "sourceLog": "synthetic",
       "frame": "6864379800000068911834336A36435536353B59445536353B59C3AB893333333333D516",
@@ -209,6 +234,8 @@
         "payload.value.switchState": null,
         "payload.value.startForwardActive": 5678.9,
         "payload.value.startReverseActive": 0,
+        "payload.value.associatedData.0.formattedValue": "5678.90",
+        "payload.value.associatedData.1.formattedValue": "0.00",
         "payload.value.endForwardActive": null
       }
     },
@@ -239,8 +266,12 @@
         "payload.value.endTime": "2026-06-30 11:05:00",
         "payload.value.beforeForwardActive": 1000.01,
         "payload.value.afterForwardActive": 1000.05,
+        "payload.value.energies.0.formattedValue": "1000.01",
+        "payload.value.energies.1.formattedValue": "0.00",
         "payload.value.energies.2.value": 12.34,
+        "payload.value.energies.2.formattedValue": "12.34",
         "payload.value.energies.3.value": 5.6,
+        "payload.value.energies.3.formattedValue": "5.60",
         "payload.value.energies.4.value": null,
         "payload.value.energies.4.valid": false
       }
