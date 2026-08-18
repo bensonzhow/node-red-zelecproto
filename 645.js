@@ -797,13 +797,7 @@ function decode645(_msg) {
         } else if (di === '04000409' && arrPush.length >= 7) {
             // 有功脉冲常数：DI(4) + N3(3字节BCD，小端)
             const dataBytes = arrPush.slice(4, 7); // LE：低字节在前
-            const val = bcdLEToInt(dataBytes);
-            value = {
-                rawValue: val,
-                unit: 'imp/kWh',
-                description: `有功脉冲常数: ${val} imp/kWh`,
-                bcdData: bcdDigitsStrLE(dataBytes) // 例如 "000400" → "400"
-            };
+            value = bcdLEToInt(dataBytes);
         } else if ((di === '02800008' || di === '02800009') && arrPush.length >= 6) {
             // 02800008: 时钟电池电压，02800009: 停电抄表电池电压
             // C# 解析为2字节，保留2位小数 → V
@@ -821,13 +815,7 @@ function decode645(_msg) {
         } else if (di === '0400040A' && arrPush.length >= 7) {
             // 无功脉冲常数：DI(4) + N3(3字节BCD，小端)
             const dataBytes = arrPush.slice(4, 7); // LE：低字节在前
-            const val = bcdLEToInt(dataBytes);
-            value = {
-                rawValue: val,
-                unit: 'imp/kvarh',
-                description: `无功脉冲常数: ${val} imp/kvarh`,
-                bcdData: bcdDigitsStrLE(dataBytes)
-            };
+            value = bcdLEToInt(dataBytes);
         } else if (di === '03300D01' && arrPush.length >= 16) {
             value = parseCoverOpenLast645(arrPush);
         } else if (di === '03110001' || di === '03360001' || di === '03370001') {

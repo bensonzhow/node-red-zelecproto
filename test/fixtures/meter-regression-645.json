@@ -61,9 +61,16 @@
       "frame": "686437980000006891073C3733373345332316",
       "expected": {
         "payload.di": "04000409",
-        "payload.value.rawValue": 1200,
-        "payload.value.unit": "imp/kWh",
-        "payload.value.bcdData": "1200"
+        "payload.value": 1200
+      }
+    },
+    {
+      "name": "读取无功脉冲常数",
+      "sourceLog": "2026-08-18 用户提供真实报文",
+      "frame": "688913284014006891073D373337333733FB16",
+      "expected": {
+        "payload.di": "0400040A",
+        "payload.value": 400
       }
     },
     {

@@ -1579,12 +1579,7 @@
         "ok": true,
         "success": true,
         "type": "data_response",
-        "value": {
-          "bcdData": "1200",
-          "description": "有功脉冲常数: 1200 imp/kWh",
-          "rawValue": 1200,
-          "unit": "imp/kWh"
-        }
+        "value": 1200
       },
       "sourceLog": "M_1500001010700009422440_3.log",
       "label": "读脉冲有功常数"
