@@ -196,7 +196,7 @@
       "frame": "682700C30591959032000011679B90000E8501012014020101041000000000010004E0A82E60120C16",
       "expected": {
         "decoding_details.unifiedFormat.oad": "20140201",
-        "payload.dataType": "电表状态",
+        "payload.dataType": "电表运行状态字1",
         "payload.value.statusWordHex": "0000",
         "payload.value.binary": "0000000000000000"
       }
@@ -251,7 +251,9 @@
         "decoding_details.unifiedFormat.oad": "30130200",
         "payload.dataType": "电表清零事件记录",
         "payload.value.hasRecord": true,
-        "payload.value.eventTime": "2019-09-27 13:54:04"
+        "payload.value.eventTime": "2019-09-27 13:54:04",
+        "payload.value.energies.0.formattedValue": "1.27",
+        "payload.value.energies.1.formattedValue": "0.00"
       }
     },
     {
@@ -274,7 +276,9 @@
         "payload.value.startTime": "2026-06-25 15:40:08",
         "payload.value.endTime": "2026-06-25 15:40:09",
         "payload.value.beforeForwardActive": 8241.45,
-        "payload.value.afterForwardActive": 8241.45
+        "payload.value.afterForwardActive": 8241.45,
+        "payload.value.energies.0.formattedValue": "8241.45",
+        "payload.value.energies.1.formattedValue": "0.00"
       }
     },
     {
@@ -306,7 +310,9 @@
         "payload.dataType": "上一次计量芯片故障事件",
         "payload.value.eventName": "计量芯片故障事件",
         "payload.value.hasRecord": true,
-        "payload.value.startTime": "2026-01-00 12:50:01"
+        "payload.value.startTime": "2026-01-00 12:50:01",
+        "payload.value.associatedData.0.formattedValue": "7475.10",
+        "payload.value.associatedData.1.formattedValue": "0.00"
       }
     },
     {
@@ -329,7 +335,9 @@
         "payload.value.eventName": "负荷开关误动作事件",
         "payload.value.relayUnit.deviceDescription": "RELAY",
         "payload.value.switchStateName": "输出",
-        "payload.value.startForwardActive": 1226.99
+        "payload.value.startForwardActive": 1226.99,
+        "payload.value.associatedData.0.formattedValue": "1226.99",
+        "payload.value.associatedData.1.formattedValue": "0.00"
       }
     },
     {

@@ -1203,7 +1203,7 @@ function parseLast645StandardEventRecord(arrPush, di) {
             key,
             label,
             value,
-            formattedValue: value === null ? null : value.toFixed(2),
+            ...(valid ? { formattedValue: value.toFixed(2) } : {}),
             rawValue,
             unit: 'kWh',
             scale: -2,

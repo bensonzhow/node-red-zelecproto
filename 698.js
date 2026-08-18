@@ -138,6 +138,10 @@ const OAD_CATEGORIES = {
         "METER_STATUS_WORD1": { oad: "20140201", desc: "电表运行状态字1", type: "bit-string" },
         "METER_STATUS_WORD2": { oad: "20140202", desc: "电表运行状态字2", type: "bit-string" },
         "METER_STATUS_WORD3": { oad: "20140203", desc: "电表运行状态字3（操作类）", type: "bit-string" },
+        "METER_STATUS_WORD4": { oad: "20140204", desc: "电表运行状态字4（A相故障状态）", type: "bit-string" },
+        "METER_STATUS_WORD5": { oad: "20140205", desc: "电表运行状态字5（B相故障状态）", type: "bit-string" },
+        "METER_STATUS_WORD6": { oad: "20140206", desc: "电表运行状态字6（C相故障状态）", type: "bit-string" },
+        "METER_STATUS_WORD7": { oad: "20140207", desc: "电表运行状态字7（合相故障状态）", type: "bit-string" },
         "LOAD_SWITCH_MALOP_LAST_RECORD": { oad: "302B0200", desc: "上一次负荷开关误动作事件", type: "record", requestType: "record" },
         "POWER_ABNORMAL_LAST_RECORD": { oad: "302C0200", desc: "上一次电源异常事件", type: "record", requestType: "record" },
         "METERING_CHIP_FAULT_LAST_RECORD": { oad: "302F0200", desc: "上一次计量芯片故障事件", type: "record", requestType: "record" },
@@ -1247,13 +1251,20 @@ function enhancedParseData(dataBuffer, oi, attributeId) {
     return { result, consumed };
 }
 
-function toBigEndian16(value) {
-    if (value == null) return null;
-    const upper = (value >>> 8) & 0xFF;
-    const lower = value & 0xFF;
-    // 将小端(低字节在前)转换为大端(高字节在前)
-    return (lower << 8) | upper;
-}
+// ==================== 电能表运行状态字（20140200～20140207） ====================
+
+const METER_STATUS_WORD_COUNT = 7;
+
+const METER_STATUS_DATA_TYPES = {
+    '20140200': '电表运行状态(数组)',
+    '20140201': '电表运行状态字1',
+    '20140202': '电表运行状态字2',
+    '20140203': '电表运行状态字3',
+    '20140204': '电表运行状态字4（A相故障状态）',
+    '20140205': '电表运行状态字5（B相故障状态）',
+    '20140206': '电表运行状态字6（C相故障状态）',
+    '20140207': '电表运行状态字7（合相故障状态）'
+};
 
 function parseStatusWordFromAxdrBitString(buffer) {
     if (!Buffer.isBuffer(buffer) || buffer.length < 3 || buffer[0] !== 0x04) return null;
@@ -1291,14 +1302,21 @@ function expandBits16(v) {
     return bits;
 }
 
-function format698StatusWord(statusWord, bitStringStatus = null, index = null) {
+function decodeMeterStatusBits(statusWord) {
+    const bits = [];
+    for (let i = 0; i < 32; i++) {
+        const mask = 1 << i;
+        bits.push((statusWord & mask) ? 1 : 0);
+    }
+    return bits;
+}
+
+function format698StatusWord(statusWord) {
     const val16 = statusWord & 0xFFFF;
     return {
-        ...(index == null ? {} : { index }),
         rawValue: val16,
         statusWordHex: val16.toString(16).padStart(4, '0').toUpperCase(),
-        // binary按原始bit-string显示，便于与645页面展示口径保持一致。
-        binary: bitStringStatus?.binary || val16.toString(2).padStart(16, '0'),
+        binary: val16.toString(2).padStart(16, '0'),
         bits: expandBits16(val16)
     };
 }
@@ -1326,87 +1344,12 @@ function parseStatusWordsFromAxdrArray(buffer) {
     return words;
 }
 
-function parseMeterStatusWord698(dataBuffer, oad, dataType) {
-    const result = createStandardResult(dataType, oad, dataBuffer);
-    try {
-        const bitStringStatus = parseStatusWordFromAxdrBitString(dataBuffer);
-        const statusWord = bitStringStatus?.statusWord ?? parseMeterStatusOptimized(dataBuffer);
-        if (statusWord === null) throw new Error('无法解析状态字');
-
-        const value = format698StatusWord(statusWord, bitStringStatus);
-        result.value = value;
-
-        setSuccessResult(result, {
-            statusWord: value.rawValue,
-            statusWordHex: value.statusWordHex,
-            statusBits: decodeMeterStatusBits(value.rawValue)
-        }, { generic: { dataType: 'bit-string' } });
-    } catch (e) {
-        setErrorResult(result, e.message);
-    }
-
-    return result;
-}
-
-function parseMeterStatusArray698(dataBuffer) {
-    const oad = '20140200';
-    const result = createStandardResult("电表状态", oad, dataBuffer);
-    try {
-        const parsedWords = parseStatusWordsFromAxdrArray(dataBuffer);
-        if (!parsedWords.length) throw new Error('无法解析状态字数组');
-
-        const words = parsedWords.map((word, index) => format698StatusWord(word.statusWord, word, index + 1));
-        result.value = {
-            word1: words[0] || null,
-            word2: words[1] || null,
-            word3: words[2] || null,
-            words
-        };
-
-        setSuccessResult(result, {
-            statusWords: words,
-            statusWord: words[0]?.rawValue ?? null,
-            statusWordHex: words[0]?.statusWordHex ?? null,
-            statusBits: words[0] ? decodeMeterStatusBits(words[0].rawValue) : []
-        }, { generic: { dataType: 'array' } });
-    } catch (e) {
-        setErrorResult(result, e.message);
-    }
-
-    return result;
-}
-
 /**
- * 解析电表运行状态字1或状态字数组
- * @param {Buffer} dataBuffer - 数据缓冲区
- * @returns {Object} 解析结果
- */
-
-function parseMeterStatus(dataBuffer, oad = '20140201') {
-    if (oad === '20140200') return parseMeterStatusArray698(dataBuffer);
-    return parseMeterStatusWord698(dataBuffer, oad, "电表状态");
-}
-
-/**
- * 解析电表运行状态字3（20140203）
- */
-function parseMeterStatusWord3(dataBuffer) {
-    return parseMeterStatusWord698(dataBuffer, '20140203', "电表运行状态字3");
-}
-
-/**
- * 解析电表运行状态字2（20140202）
- */
-function parseMeterStatusWord2(dataBuffer) {
-    return parseMeterStatusWord698(dataBuffer, '20140202', "电表运行状态字2");
-}
-
-/**
- * 优化的状态字解析策略
+ * 状态字兼容解析路径
  * @param {Buffer} dataBuffer - 数据缓冲区
  * @returns {number|null} 状态字或null
  */
-function parseMeterStatusOptimized(dataBuffer) {
+function parseMeterStatusFallback(dataBuffer) {
     // 策略1: 直接解析Security-Response结构
     let statusWord = parseSecurityResponseStructure(dataBuffer);
     if (statusWord !== null) return statusWord;
@@ -1552,21 +1495,60 @@ function parseWithEnhancedParser(dataBuffer) {
     return null;
 }
 
-/**
- * 专门解析电表运行状态字2的函数 - 简化版本，只返回0、1位值数组
- * @param {number} statusWord - 32位状态字
- * @returns {Array} 状态位原始值数组（0或1），从bit0到bit31
- */
-function decodeMeterStatusBits(statusWord) {
-    const bits = [];
+function parseMeterStatusWord698(dataBuffer, oad) {
+    const dataType = METER_STATUS_DATA_TYPES[oad];
+    const result = createStandardResult(dataType, oad, dataBuffer);
+    try {
+        const bitStringStatus = parseStatusWordFromAxdrBitString(dataBuffer);
+        const statusWord = bitStringStatus?.statusWord ?? parseMeterStatusFallback(dataBuffer);
+        if (statusWord === null) throw new Error('无法解析状态字');
 
-    // 从bit0到bit31，生成32个位的值
-    for (let i = 0; i < 32; i++) {
-        const mask = 1 << i;
-        bits.push((statusWord & mask) ? 1 : 0);
+        const value = format698StatusWord(statusWord);
+        result.value = value;
+
+        setSuccessResult(result, {
+            statusWord: value.rawValue,
+            statusWordHex: value.statusWordHex,
+            statusBits: decodeMeterStatusBits(value.rawValue)
+        }, { generic: { dataType: 'bit-string' } });
+    } catch (e) {
+        setErrorResult(result, e.message);
     }
 
-    return bits;
+    return result;
+}
+
+function parseMeterStatusArray698(dataBuffer) {
+    const oad = '20140200';
+    const result = createStandardResult(METER_STATUS_DATA_TYPES[oad], oad, dataBuffer);
+    try {
+        const parsedWords = parseStatusWordsFromAxdrArray(dataBuffer);
+        if (!parsedWords.length) throw new Error('无法解析状态字数组');
+
+        const words = parsedWords.map(word => format698StatusWord(word.statusWord));
+        const value = {};
+        for (let i = 0; i < METER_STATUS_WORD_COUNT; i++) {
+            value[`word${i + 1}`] = words[i] || null;
+        }
+        value.words = words;
+        result.value = value;
+
+        setSuccessResult(result, {
+            statusWords: words,
+            statusWord: words[0]?.rawValue ?? null,
+            statusWordHex: words[0]?.statusWordHex ?? null,
+            statusBits: words[0] ? decodeMeterStatusBits(words[0].rawValue) : []
+        }, { generic: { dataType: 'array' } });
+    } catch (e) {
+        setErrorResult(result, e.message);
+    }
+
+    return result;
+}
+
+function parseMeterStatus698(dataBuffer, oad) {
+    if (oad === '20140200') return parseMeterStatusArray698(dataBuffer);
+    return parseMeterStatusWord698(dataBuffer, oad);
 }
 
 // 已废弃：旧的“掉电事件记录”解析函数，改为专用 30110700 记录数解析
@@ -1737,10 +1719,13 @@ function parseLastOpenCoverRecord(payload) {
             const [key, label, unit] = energyInfo[cell.oi];
             const prefix = cell.feature === 1 ? 'before' : 'after';
             const valid = Number.isFinite(cell.rawValue) && cell.rawValue !== 0xFFFFFFFF;
+            const value = valid ? cell.rawValue / 100 : null;
+            const formattedValue = formatEventEnergyValue(value, unit, -2);
             return {
                 key: `${prefix}${key}`,
                 label: `开盖${cell.feature === 1 ? '前' : '后'}${label}`,
-                value: valid ? cell.rawValue / 100 : null,
+                value,
+                ...(formattedValue === null ? {} : { formattedValue }),
                 unit,
                 scale: -2,
                 valid,
@@ -1785,13 +1770,6 @@ const LAST_STANDARD_EVENT_RECORDS = {
     '302F0200': '计量芯片故障事件'
 };
 
-const LOAD_SWITCH_ENERGY_FIELDS = {
-    '1:0010': ['startForwardActive', '发生时刻正向有功总电能'],
-    '1:0020': ['startReverseActive', '发生时刻反向有功总电能'],
-    '4:0010': ['endForwardActive', '结束时刻正向有功总电能'],
-    '4:0020': ['endReverseActive', '结束时刻反向有功总电能']
-};
-
 /** 将F205继电器单元结构转换为稳定的业务字段。 */
 function parseRelayUnit(cell) {
     const fields = Array.isArray(cell?.rawValue) ? cell.rawValue.map(item => item?.parsedValue) : [];
@@ -1810,89 +1788,37 @@ function parseRelayUnit(cell) {
     };
 }
 
-const STANDARD_EVENT_RECORD_SCHEMAS = {
-    '302B0200': {
-        structures: {
-            relayUnit: { oi: 'F205', parser: parseRelayUnit }
-        },
-        associatedFields: LOAD_SWITCH_ENERGY_FIELDS,
-        outputFields: {
-            relayUnit: 'structures.relayUnit',
-            switchState: 'structures.relayUnit.currentState',
-            switchStateName: 'structures.relayUnit.currentStateName',
-            startForwardActive: 'values.startForwardActive',
-            startReverseActive: 'values.startReverseActive',
-            endForwardActive: 'values.endForwardActive',
-            endReverseActive: 'values.endReverseActive'
-        }
-    }
-};
+function formatEventEnergyValue(value, unit, scale) {
+    if (!Number.isFinite(value) || (unit !== 'kWh' && unit !== 'kvarh')) return null;
+    return value.toFixed(Math.abs(scale ?? 0));
+}
 
-function toStandardAssociatedCell(cell, fieldInfo = null) {
-    if (!fieldInfo) {
-        return {
-            oad: cell.oad,
-            rawOad: cell.rawOad,
-            name: cell.name,
-            feature: cell.feature,
-            featureName: cell.featureName,
-            value: cell.value,
-            rawValue: cell.rawValue,
-            unit: cell.unit,
-            scale: cell.scale,
-            rawData: cell.rawData
-        };
-    }
-
+function toStandardAssociatedCell(cell, isLoadSwitch) {
     const valid = Number.isFinite(cell.rawValue) ? cell.rawValue !== 0xFFFFFFFF : true;
+    const value = valid ? cell.value : null;
+    const formattedValue = formatEventEnergyValue(value, cell.unit, cell.scale);
+    const isLoadSwitchActiveEnergy = isLoadSwitch && (cell.feature === 1 || cell.feature === 4) && (cell.oi === '0010' || cell.oi === '0020');
+    const prefix = cell.feature === 1 ? 'start' : 'end';
+    const direction = cell.oi === '0010' ? 'ForwardActive' : 'ReverseActive';
+    const timeLabel = cell.feature === 1 ? '发生时刻' : '结束时刻';
+    const directionLabel = cell.oi === '0010' ? '正向' : '反向';
     return {
-        key: fieldInfo[0],
-        label: fieldInfo[1],
+        ...(isLoadSwitchActiveEnergy ? {
+            key: `${prefix}${direction}`,
+            label: `${timeLabel}${directionLabel}有功总电能`
+        } : { name: cell.name }),
         oad: cell.oad,
         rawOad: cell.rawOad,
         feature: cell.feature,
         featureName: cell.featureName,
-        value: valid ? cell.value : null,
+        value,
         rawValue: cell.rawValue,
         unit: cell.unit,
         scale: cell.scale,
-        valid,
+        ...(formattedValue === null ? {} : { formattedValue }),
+        ...(isLoadSwitch || !valid ? { valid } : {}),
         rawData: cell.rawData
     };
-}
-
-function readMappedValue(source, path) {
-    return path.split('.').reduce((value, key) => value?.[key], source) ?? null;
-}
-
-/** 按事件schema映射结构化字段；未配置的事件保留通用关联数据。 */
-function applyStandardEventSchema(row, schema, baseOis) {
-    if (!schema) {
-        return {
-            associatedData: row.filter(cell => !baseOis.has(cell.oi)).map(cell => toStandardAssociatedCell(cell)),
-            output: {}
-        };
-    }
-
-    const structures = {};
-    Object.entries(schema.structures || {}).forEach(([key, descriptor]) => {
-        structures[key] = descriptor.parser(row.find(cell => cell.oi === descriptor.oi));
-    });
-
-    const values = {};
-    const associatedData = row.filter(cell => schema.associatedFields?.[`${cell.feature}:${cell.oi}`]).map(cell => {
-        const fieldInfo = schema.associatedFields[`${cell.feature}:${cell.oi}`];
-        const item = toStandardAssociatedCell(cell, fieldInfo);
-        values[fieldInfo[0]] = item.value;
-        return item;
-    });
-
-    const source = { structures, values };
-    const output = Object.fromEntries(Object.entries(schema.outputFields || {}).map(([key, path]) => [
-        key,
-        readMappedValue(source, path)
-    ]));
-    return { associatedData, output };
 }
 
 /** 解析属性2中选中的上一条标准事件记录。 */
@@ -1902,11 +1828,21 @@ function parseLastStandardEventRecord(dataBuffer, oad, eventName) {
         const { count, row } = parseSelectedRecordRow(dataBuffer);
         const valueOf = oi => row.find(cell => cell.oi === oi && cell.feature === 0)?.value ?? null;
         const baseOis = new Set(['2022', '201E', '2020', '2024', '3300']);
-        const { associatedData, output } = applyStandardEventSchema(
-            row,
-            STANDARD_EVENT_RECORD_SCHEMAS[oad],
-            baseOis
-        );
+        const isLoadSwitch = oad === '302B0200';
+        const associatedData = row
+            .filter(cell => !baseOis.has(cell.oi) && cell.oi !== 'F205')
+            .map(cell => toStandardAssociatedCell(cell, isLoadSwitch));
+        const associatedValue = (feature, oi) => associatedData.find(item => item.feature === feature && item.oad.startsWith(oi))?.value ?? null;
+        const relayUnit = isLoadSwitch ? parseRelayUnit(row.find(cell => cell.oi === 'F205')) : null;
+        const loadSwitchFields = isLoadSwitch ? {
+            relayUnit,
+            switchState: relayUnit?.currentState ?? null,
+            switchStateName: relayUnit?.currentStateName ?? null,
+            startForwardActive: associatedValue(1, '0010'),
+            startReverseActive: associatedValue(1, '0020'),
+            endForwardActive: associatedValue(4, '0010'),
+            endReverseActive: associatedValue(4, '0020')
+        } : {};
 
         result.value = {
             type: 'standard_event_record',
@@ -1919,7 +1855,7 @@ function parseLastStandardEventRecord(dataBuffer, oad, eventName) {
             endTime: valueOf('2020'),
             source: valueOf('2024'),
             reportStatus: valueOf('3300'),
-            ...output,
+            ...loadSwitchFields,
             associatedData,
             rawData: Buffer.from(dataBuffer).toString('hex').toUpperCase()
         };
@@ -1946,6 +1882,20 @@ function describeEventOad(rawOad) {
     const feature = (attributeByte >> 5) & 0x07;
     const oad = `${hex.slice(0, 4)}${attributeId.toString(16).padStart(2, '0')}${hex.slice(6)}`.toUpperCase();
     const info = getOADInfo(oad) || getOADInfo(`${oad.slice(0, 6)}00`);
+    const energyType = {
+        '001': ['正向有功', 'kWh'],
+        '002': ['反向有功', 'kWh'],
+        '005': ['第一象限无功', 'kvarh'],
+        '006': ['第二象限无功', 'kvarh'],
+        '007': ['第三象限无功', 'kvarh'],
+        '008': ['第四象限无功', 'kvarh']
+    }[hex.slice(0, 3)];
+    const phase = { '0': '总', '1': 'A相', '2': 'B相', '3': 'C相' }[hex[3]];
+    const eventEnergyInfo = energyType && phase ? {
+        desc: `${phase}${energyType[0]}电能`,
+        unit: energyType[1],
+        scale: -2
+    } : null;
     return {
         rawOad: hex,
         oad,
@@ -1954,9 +1904,9 @@ function describeEventOad(rawOad) {
         index: parseInt(hex.slice(6, 8), 16),
         feature,
         featureName: EVENT_ASSOCIATION_FEATURES[feature] || `未知(${feature})`,
-        name: info?.desc || '未知对象属性',
-        unit: info?.unit || null,
-        scale: info?.scale ?? 0
+        name: info?.desc || eventEnergyInfo?.desc || '未知对象属性',
+        unit: info?.unit || eventEnergyInfo?.unit || null,
+        scale: info?.scale ?? eventEnergyInfo?.scale ?? 0
     };
 }
 
@@ -2053,12 +2003,17 @@ function parseMeterResetEventRecord(dataBuffer) {
         const energies = row.filter(cell => cell.feature > 0).map(cell => {
             const info = METER_RESET_ENERGY_INFO[cell.oi];
             const valid = Number.isFinite(cell.rawValue) && cell.rawValue !== 0xFFFFFFFF;
+            const value = valid ? (info ? cell.rawValue / 100 : cell.value) : null;
+            const unit = info?.unit || cell.unit;
+            const scale = info ? -2 : cell.scale;
+            const formattedValue = formatEventEnergyValue(value, unit, scale);
             return {
                 key: info?.key || cell.oad,
                 label: info?.label || cell.name,
-                value: valid ? (info ? cell.rawValue / 100 : cell.value) : null,
-                unit: info?.unit || cell.unit,
-                scale: info ? -2 : cell.scale,
+                value,
+                ...(formattedValue === null ? {} : { formattedValue }),
+                unit,
+                scale,
                 valid,
                 rawData: cell.rawData
             };
@@ -2675,9 +2630,7 @@ function oadParserRouter(payload, oad) {
     if (oad === '302B0701') return parseEventOccurrenceStatistics(payload, oad, '负荷开关误动作事件');
     if (oad === '302F0400') return parseEventRecordCount(payload, oad, '计量芯片故障事件');
     if (oad === '302F0701') return parseEventOccurrenceStatistics(payload, oad, '计量芯片故障事件');
-    if (oad === '20140200' || oad === '20140201') return parseMeterStatus(payload, oad);
-    if (oad === '20140202') return parseMeterStatusWord2(payload);
-    if (oad === '20140203') return parseMeterStatusWord3(payload);
+    if (/^2014020[0-7]$/.test(oad)) return parseMeterStatus698(payload, oad);
     if (oad === 'F3000500') return parseAutoDisplayParameters(payload); // 自动轮显参数
     if (oad === '41090200' || oad === '410A0200') return parsePulseConstantData(payload, oad); // 脉冲常数
     if (oad === '40070205') return parseLCDDecimalDigits(payload); //抄读当前组合有功电能数据块
