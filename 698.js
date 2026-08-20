@@ -1747,6 +1747,7 @@ function parseLastOpenCoverRecord(payload) {
             sequence,
             startTime,
             endTime,
+            eventData: build698EventData(row),
             beforeForwardActive,
             beforeReverseActive,
             afterForwardActive,
@@ -1791,6 +1792,36 @@ function parseRelayUnit(cell) {
 function formatEventEnergyValue(value, unit, scale) {
     if (!Number.isFinite(value) || (unit !== 'kWh' && unit !== 'kvarh')) return null;
     return value.toFixed(Math.abs(scale ?? 0));
+}
+
+function build698EventData(row) {
+    const numericTypes = new Set([
+        '整数', '长整数', '双长整数', '64位长整数',
+        '无符号整数', '长无符号整数', '双长无符号整数', '64位无符号长整数',
+        '32位浮点数', '64位浮点数'
+    ]);
+    const timeTypes = new Set(['日期时间', '简化日期时间', '日期', '时间']);
+    const formatParsedItem = item => {
+        if (item.parsedValue === null) return ['NULL'];
+        if (Array.isArray(item.parsedValue)) return item.parsedValue.flatMap(formatParsedItem);
+        if (['string', 'number', 'boolean'].includes(typeof item.parsedValue)) {
+            return [String(item.parsedValue)];
+        }
+        return [item.rawData];
+    };
+
+    return row.flatMap(cell => {
+        if (cell.rawValue === null) return ['NULL'];
+        if (Array.isArray(cell.rawValue)) return cell.rawValue.flatMap(formatParsedItem);
+        const formattedEnergy = formatEventEnergyValue(cell.value, cell.unit, cell.scale);
+        if (cell.unit === 'kWh' || cell.unit === 'kvarh') {
+            return [cell.rawValue === 0xFFFFFFFF ? 'NULL' : (formattedEnergy ?? cell.rawData)];
+        }
+        if (numericTypes.has(cell.dataType) || timeTypes.has(cell.dataType)) {
+            return [String(cell.value)];
+        }
+        return [cell.rawData];
+    }).join('|');
 }
 
 function toStandardAssociatedCell(cell, isLoadSwitch) {
@@ -1855,6 +1886,7 @@ function parseLastStandardEventRecord(dataBuffer, oad, eventName) {
             endTime: valueOf('2020'),
             source: valueOf('2024'),
             reportStatus: valueOf('3300'),
+            eventData: build698EventData(row),
             ...loadSwitchFields,
             associatedData,
             rawData: Buffer.from(dataBuffer).toString('hex').toUpperCase()
@@ -1971,7 +2003,7 @@ function parseSelectedRecordRow(dataBuffer) {
         const value = typeof rawValue === 'number' && column.scale
             ? rawValue * Math.pow(10, column.scale)
             : rawValue;
-        return { ...column, rawValue, value, rawData: parsed.rawData };
+        return { ...column, rawValue, value, dataType: parsed.dataType, rawData: parsed.rawData };
     });
     return { count: rowCount.len, row };
 }
@@ -2027,6 +2059,7 @@ function parseMeterResetEventRecord(dataBuffer) {
             recordIndex: 1,
             eventTime,
             eventTimeRaw,
+            eventData: build698EventData(row),
             energies,
             rawData
         };

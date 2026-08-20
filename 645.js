@@ -1017,6 +1017,10 @@ function parse645DateTime(bytes) {
     return parsed ? parsed.formatted : null;
 }
 
+function format645EventEnergyPart(energy) {
+    return energy.valid ? energy.formattedValue : 'NULL';
+}
+
 // 解析电表清零记录（DI=03300101~0330010A）。
 // 数据结构：发生时刻(6B) + 操作者代码(4B) + 清零前电能(24项×4B，小端BCD，2位小数)。
 function parseMeterResetRecord645(arrPush, di) {
@@ -1072,6 +1076,11 @@ function parseMeterResetRecord645(arrPush, di) {
             rawBCD
         };
     });
+    const eventData = [
+        eventTime ?? 'NULL',
+        operatorCode ?? 'NULL',
+        ...energies.map(format645EventEnergyPart)
+    ].join('|');
 
     return {
         type: 'meter_reset_record',
@@ -1081,6 +1090,7 @@ function parseMeterResetRecord645(arrPush, di) {
         eventTime,
         eventTimeRaw,
         operatorCode,
+        eventData,
         energies,
         rawData: bytesToHex(data).replace(/\s+/g, ''),
     };
@@ -1125,13 +1135,16 @@ function parseCoverOpenLast645(arrPush) {
         };
     });
     const valueOf = key => energies.find(item => item.key === key)?.value ?? null;
+    const startTime = parse645DateTime(data.slice(0, 6));
+    const endTime = parse645DateTime(data.slice(6, 12));
 
     return {
         type: 'cover_open_record',
         ok: true,
         di: '03300D01',
-        startTime: parse645DateTime(data.slice(0, 6)),
-        endTime: parse645DateTime(data.slice(6, 12)),
+        startTime,
+        endTime,
+        eventData: [startTime ?? 'NULL', endTime ?? 'NULL', ...energies.map(format645EventEnergyPart)].join('|'),
         beforeForwardActive: valueOf('beforeForwardActive'),
         beforeReverseActive: valueOf('beforeReverseActive'),
         afterForwardActive: valueOf('afterForwardActive'),
@@ -1202,6 +1215,12 @@ function parseLast645StandardEventRecord(arrPush, di) {
     const valueOf = key => associatedData.find(item => item.key === key)?.value ?? null;
     const startTime = parse645DateTime(data.slice(0, 6));
     const endTime = parse645DateTime(data.slice(6, 12));
+    const eventData = [
+        startTime ?? 'NULL',
+        endTime ?? 'NULL',
+        ...(config.hasState ? [state.toString(16).toUpperCase().padStart(2, '0')] : []),
+        ...associatedData.map(format645EventEnergyPart)
+    ].join('|');
 
     return {
         type: 'standard_event_record',
@@ -1214,6 +1233,7 @@ function parseLast645StandardEventRecord(arrPush, di) {
         endTime,
         source: null,
         reportStatus: null,
+        eventData,
         switchState: state,
         switchStateName: state === null ? null : (state === 0 ? '通' : state === 1 ? '断' : '未知'),
         startForwardActive: valueOf('startForwardActive'),

@@ -3243,7 +3243,8 @@
             "sequence": 38,
             "source": null,
             "startTime": "2026-08-11 10:41:17",
-            "type": "standard_event_record"
+            "type": "standard_event_record",
+            "eventData": "38|2026-08-11 10:41:17|2026-08-11 13:50:09|NULL|NULL"
           },
           "dataType": "上一次掉电事件",
           "metadata": {
@@ -3269,7 +3270,8 @@
             "sequence": 38,
             "source": null,
             "startTime": "2026-08-11 10:41:17",
-            "type": "standard_event_record"
+            "type": "standard_event_record",
+            "eventData": "38|2026-08-11 10:41:17|2026-08-11 13:50:09|NULL|NULL"
           }
         },
         "unified": {
@@ -3286,7 +3288,8 @@
               "sequence": 38,
               "source": null,
               "startTime": "2026-08-11 10:41:17",
-              "type": "standard_event_record"
+              "type": "standard_event_record",
+              "eventData": "38|2026-08-11 10:41:17|2026-08-11 13:50:09|NULL|NULL"
             },
             "dataType": "上一次掉电事件",
             "metadata": {
@@ -3312,7 +3315,8 @@
               "sequence": 38,
               "source": null,
               "startTime": "2026-08-11 10:41:17",
-              "type": "standard_event_record"
+              "type": "standard_event_record",
+              "eventData": "38|2026-08-11 10:41:17|2026-08-11 13:50:09|NULL|NULL"
             }
           },
           "invokeId": 1,
@@ -3379,7 +3383,8 @@
             "ok": true,
             "rawData": "07002022020000201E020000202002000020240200003300020000001022010000202201010106000000001C07E3091B0D3604000000060000007F06000000000000",
             "recordIndex": 1,
-            "type": "meter_reset_record"
+            "type": "meter_reset_record",
+            "eventData": "0|2019-09-27 13:54:04|NULL|NULL|NULL|1.27|0.00"
           },
           "dataType": "电表清零事件记录",
           "metadata": {
@@ -3422,7 +3427,8 @@
             "ok": true,
             "rawData": "07002022020000201E020000202002000020240200003300020000001022010000202201010106000000001C07E3091B0D3604000000060000007F06000000000000",
             "recordIndex": 1,
-            "type": "meter_reset_record"
+            "type": "meter_reset_record",
+            "eventData": "0|2019-09-27 13:54:04|NULL|NULL|NULL|1.27|0.00"
           }
         },
         "unified": {
@@ -3456,7 +3462,8 @@
               "ok": true,
               "rawData": "07002022020000201E020000202002000020240200003300020000001022010000202201010106000000001C07E3091B0D3604000000060000007F06000000000000",
               "recordIndex": 1,
-              "type": "meter_reset_record"
+              "type": "meter_reset_record",
+              "eventData": "0|2019-09-27 13:54:04|NULL|NULL|NULL|1.27|0.00"
             },
             "dataType": "电表清零事件记录",
             "metadata": {
@@ -3499,7 +3506,8 @@
               "ok": true,
               "rawData": "07002022020000201E020000202002000020240200003300020000001022010000202201010106000000001C07E3091B0D3604000000060000007F06000000000000",
               "recordIndex": 1,
-              "type": "meter_reset_record"
+              "type": "meter_reset_record",
+              "eventData": "0|2019-09-27 13:54:04|NULL|NULL|NULL|1.27|0.00"
             }
           },
           "invokeId": 1,
@@ -3594,6 +3602,7 @@
             "sequence": 0,
             "startTime": "2026-06-25 15:40:08",
             "type": "cover_open_record",
+            "eventData": "0|2026-06-25 15:40:08|2026-06-25 15:40:09|NULL|NULL|8241.45|0.00|8241.45|0.00",
             "unit": "kWh"
           },
           "dataType": "上一次开盖事件记录",
@@ -3662,6 +3671,7 @@
             "sequence": 0,
             "startTime": "2026-06-25 15:40:08",
             "type": "cover_open_record",
+            "eventData": "0|2026-06-25 15:40:08|2026-06-25 15:40:09|NULL|NULL|8241.45|0.00|8241.45|0.00",
             "unit": "kWh"
           }
         },
@@ -3721,6 +3731,7 @@
               "sequence": 0,
               "startTime": "2026-06-25 15:40:08",
               "type": "cover_open_record",
+              "eventData": "0|2026-06-25 15:40:08|2026-06-25 15:40:09|NULL|NULL|8241.45|0.00|8241.45|0.00",
               "unit": "kWh"
             },
             "dataType": "上一次开盖事件记录",
@@ -3789,6 +3800,7 @@
               "sequence": 0,
               "startTime": "2026-06-25 15:40:08",
               "type": "cover_open_record",
+              "eventData": "0|2026-06-25 15:40:08|2026-06-25 15:40:09|NULL|NULL|8241.45|0.00|8241.45|0.00",
               "unit": "kWh"
             }
           },
@@ -3916,7 +3928,8 @@
             "startTime": "2025-09-07 12:00:43",
             "switchState": 0,
             "switchStateName": "输出",
-            "type": "standard_event_record"
+            "type": "standard_event_record",
+            "eventData": "0|2025-09-07 12:00:43|2025-09-11 06:12:17|NULL|NULL|RELAY|0|0|0|1226.99|0.00|1226.99|0.00"
           },
           "dataType": "上一次负荷开关误动作事件",
           "metadata": {
@@ -4019,7 +4032,8 @@
             "startTime": "2025-09-07 12:00:43",
             "switchState": 0,
             "switchStateName": "输出",
-            "type": "standard_event_record"
+            "type": "standard_event_record",
+            "eventData": "0|2025-09-07 12:00:43|2025-09-11 06:12:17|NULL|NULL|RELAY|0|0|0|1226.99|0.00|1226.99|0.00"
           }
         },
         "unified": {
@@ -4113,7 +4127,8 @@
               "startTime": "2025-09-07 12:00:43",
               "switchState": 0,
               "switchStateName": "输出",
-              "type": "standard_event_record"
+              "type": "standard_event_record",
+              "eventData": "0|2025-09-07 12:00:43|2025-09-11 06:12:17|NULL|NULL|RELAY|0|0|0|1226.99|0.00|1226.99|0.00"
             },
             "dataType": "上一次负荷开关误动作事件",
             "metadata": {
@@ -4216,7 +4231,8 @@
               "startTime": "2025-09-07 12:00:43",
               "switchState": 0,
               "switchStateName": "输出",
-              "type": "standard_event_record"
+              "type": "standard_event_record",
+              "eventData": "0|2025-09-07 12:00:43|2025-09-11 06:12:17|NULL|NULL|RELAY|0|0|0|1226.99|0.00|1226.99|0.00"
             }
           },
           "invokeId": 1,
@@ -4296,7 +4312,8 @@
             "sequence": 0,
             "source": null,
             "startTime": "2026-01-00 12:50:01",
-            "type": "standard_event_record"
+            "type": "standard_event_record",
+            "eventData": "0|2026-01-00 12:50:01|NULL|NULL|NULL|7475.10|0.00"
           },
           "dataType": "上一次计量芯片故障事件",
           "metadata": {
@@ -4349,7 +4366,8 @@
             "sequence": 0,
             "source": null,
             "startTime": "2026-01-00 12:50:01",
-            "type": "standard_event_record"
+            "type": "standard_event_record",
+            "eventData": "0|2026-01-00 12:50:01|NULL|NULL|NULL|7475.10|0.00"
           }
         },
         "unified": {
@@ -4393,7 +4411,8 @@
               "sequence": 0,
               "source": null,
               "startTime": "2026-01-00 12:50:01",
-              "type": "standard_event_record"
+              "type": "standard_event_record",
+              "eventData": "0|2026-01-00 12:50:01|NULL|NULL|NULL|7475.10|0.00"
             },
             "dataType": "上一次计量芯片故障事件",
             "metadata": {
@@ -4446,7 +4465,8 @@
               "sequence": 0,
               "source": null,
               "startTime": "2026-01-00 12:50:01",
-              "type": "standard_event_record"
+              "type": "standard_event_record",
+              "eventData": "0|2026-01-00 12:50:01|NULL|NULL|NULL|7475.10|0.00"
             }
           },
           "invokeId": 1,

@@ -158,6 +158,50 @@ runCase('645/698 事件电能 / formattedValue规则一致', function () {
     });
 });
 
+runCase('645/698 事件记录 / eventData按报文顺序保留NULL并展开复杂结构', function () {
+    var powerDown698 = runQuietly(proto698, {
+        mode: 'decode',
+        payload: '686900C30591719902009011CB899000508503013011020007002022020000201E0200002020020000202402000033000200000010220100002022010101060000002B1C07EA08140B2F231C07EA08140E02370000060001C9DF0600000000000001000497F36ED9E3F316'
+    }).payload.value;
+    assert.strictEqual(powerDown698.sequence, 43, '698掉电事件序列号不一致');
+    assert.strictEqual(powerDown698.eventData.split('|')[0], String(powerDown698.sequence), 'eventData首值应为事件序列号');
+    assert.strictEqual(
+        powerDown698.eventData,
+        '43|2026-08-20 11:47:35|2026-08-20 14:02:55|NULL|NULL|1172.15|0.00',
+        '698掉电事件eventData不一致'
+    );
+
+    var meterReset698 = runQuietly(proto698, {
+        mode: 'decode',
+        payload: '686200C30591719902009011D2CB9000498503013013020007002022020000201E020000202002000020240200003300020000001022010000202201010106000000021C07E70A0C0F1738000000060000008206000000000000010004BF76A85DC5D716'
+    }).payload.value;
+    assert.strictEqual(
+        meterReset698.eventData,
+        '2|2023-10-12 15:23:56|NULL|NULL|NULL|1.30|0.00',
+        '698清零事件eventData不一致'
+    );
+
+    var loadSwitch698Case = fixtures698.decodeCases.find(function (item) { return item.name === '上一次负荷开关误动作事件'; });
+    var loadSwitch698 = runQuietly(proto698, { mode: 'decode', payload: loadSwitch698Case.frame }).payload.value;
+    assert.strictEqual(
+        loadSwitch698.eventData,
+        '0|2025-09-07 12:00:43|2025-09-11 06:12:17|NULL|NULL|RELAY|0|0|0|1226.99|0.00|1226.99|0.00',
+        '698复杂事件列应按内部元素顺序展开解析值'
+    );
+
+    [
+        ['上一次电表清零记录', '2016-01-26 15:24:59|00000000|0.37|0.00|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL|NULL'],
+        ['上一次掉电事件', '2026-08-05 14:03:59|2026-08-05 18:30:00'],
+        ['上一次电源异常事件', '2026-08-02 03:22:10|2026-08-02 03:22:11|5678.90|0.00'],
+        ['上一次负荷开关误动作事件实际报文含动作后状态', '2021-07-30 03:54:25|2021-07-30 03:55:39|00|1239.84|0.65|1239.84|0.65'],
+        ['上一次开盖明细', '2026-06-30 11:00:00|2026-06-30 11:05:00|1000.01|0.00|12.34|5.60|NULL|0.00|1000.05|0.00|12.34|5.60|0.00|0.00']
+    ].forEach(function ([name, expected]) {
+        var testCase = fixtures645.decodeCases.find(function (item) { return item.name === name; });
+        var detail = runQuietly(proto645, { mode: 'decode', payload: testCase.frame }).payload.value;
+        assert.strictEqual(detail.eventData, expected, name + ' eventData不一致');
+    });
+});
+
 runCase('698 标准事件 / 返回的额外电能列不被过滤', function () {
     var apdu = '850301302B02000C002022020000201E020000202002000020240200003300020000F2052201000010220100002022010000108201000020820100005022010000602201010106000000001C07E909070C002B1C07E9090B060C11000002040A0552454C4159160016001600060001DF4B0600000000060001DF4B0600000000060000303906FFFFFFFF';
     var encoded = runQuietly(proto698, {
@@ -176,6 +220,7 @@ runCase('698 标准事件 / 返回的额外电能列不被过滤', function () {
     assert.strictEqual(invalidEnergy.value, null, '全F电能值应判为无效');
     assert.strictEqual(invalidEnergy.rawData, '06FFFFFFFF', '698无效电能应保留A-XDR原始值');
     assert.strictEqual(Object.prototype.hasOwnProperty.call(invalidEnergy, 'formattedValue'), false, '无效电能不应输出formattedValue');
+    assert.ok(detail.eventData.endsWith('|123.45|NULL'), 'eventData中的无效电能应统一显示NULL');
     assert.strictEqual(detail.startForwardActive, 1226.99, '旧顶层兼容字段不应变化');
 });
 
