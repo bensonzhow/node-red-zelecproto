@@ -4,10 +4,11 @@
   "description": "node-red zelecproto node",
   "main": "index.js",
   "scripts": {
-    "test": "node test/protocol-regression.js && node test/negative-regression.js && node test/roundtrip-regression.js",
+    "test": "node test/protocol-regression.js && node test/negative-regression.js && node test/roundtrip-regression.js && node test/node-wrapper-regression.js",
     "test:protocol": "node test/protocol-regression.js",
     "test:negative": "node test/negative-regression.js",
-    "test:roundtrip": "node test/roundtrip-regression.js"
+    "test:roundtrip": "node test/roundtrip-regression.js",
+    "test:nodes": "node test/node-wrapper-regression.js"
   },
   "repository": {
     "type": "git",

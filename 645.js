@@ -282,8 +282,6 @@ function decode645(_msg) {
         return Buffer.from(rev).toString('hex').toUpperCase(); // 12位
     }
     function minus33(arr) { return arr.map(v => (v - 0x33) & 0xFF); }
-    function bytesToIntBE(a) { return parseInt(Buffer.from(a).toString('hex')); }
-
     // ===== 取入参并清洗 =====
     // 允许传 {put:'...'} 或 {payload:'...'}，优先 put
     let put = ((_msg.payload && _msg.payload.put) || _msg.put || _msg.payload || '').toString();
@@ -480,7 +478,7 @@ function decode645(_msg) {
         //     });
         // }
         if (di === '03110000' && arrPush.length >= 3) {
-            value = bytesToIntBE(arrPush.slice(-3).reverse());
+            value = bcdLEToInt(arrPush.slice(-3));
         } else if (di == '04000401') {
             //通信地址解析
             value = Buffer.from(arrPush.slice(-6).reverse()).toString('hex').toUpperCase()
@@ -489,23 +487,23 @@ function decode645(_msg) {
             const countBytes = arrPush.slice(4, 7);
             value = bcdLEToInt(countBytes);
         } else if (di === '04000105' && arrPush.length >= 2) {
-            value = bytesToIntBE(arrPush.slice(-2).reverse());
+            value = bcdLEToInt(arrPush.slice(-2));
         } else if (di === '03300100' && arrPush.length >= 3) {
-            value = bytesToIntBE(arrPush.slice(-3).reverse());
+            value = bcdLEToInt(arrPush.slice(-3));
         } else if (di === '01013003' && arrPush.length >= 106) {
             value = Buffer.from(arrPush.slice(-106).reverse()).toString('hex').toUpperCase();
         } else if (['02020100', '02020200', '02020300'].includes(di) && arrPush.length >= 3) {
-            value = bytesToIntBE(arrPush.slice(-3).reverse());
+            value = bcdLEToInt(arrPush.slice(-3));
         } else if (['02010100', '02010200', '02010300'].includes(di) && arrPush.length >= 3) {
-            value = bytesToIntBE(arrPush.slice(-3).reverse());
+            value = bcdLEToInt(arrPush.slice(-3));
         } else if (di === '02030000' && arrPush.length >= 3) {
             //读瞬时功率
-            // value = Math.round((bytesToIntBE(arrPush.slice(-3).reverse()) * 0.0001) *1e4)/1e4;
-            value = bytesToIntBE(arrPush.slice(-3).reverse())
+            // value = Math.round((bcdLEToInt(arrPush.slice(-3)) * 0.0001) *1e4)/1e4;
+            value = bcdLEToInt(arrPush.slice(-3))
         } else if (di === '02060000' && arrPush.length >= 2) {
-            value = bytesToIntBE(arrPush.slice(-2).reverse());
+            value = bcdLEToInt(arrPush.slice(-2));
         } else if (di === '02030100' && arrPush.length >= 4) {
-            value = bytesToIntBE(arrPush.slice(-4).reverse());
+            value = bcdLEToInt(arrPush.slice(-4));
         }
         else if (di === '040005FF' && arrPush.length >= 6) {
             // 运行状态数据块：状态字1～7各2字节，随后为4字节密钥状态字，共18字节。
@@ -672,7 +670,7 @@ function decode645(_msg) {
         }
         // else if (['0000FF00', '0001FF00', '0002FF00'].includes(di) && arrPush.length > 4) {
         //     const data = arrPush.slice(4); const result = [];
-        //     for (let i = 0; i < data.length; i += 4) { result.push(bytesToIntBE(data.slice(i, i + 4).reverse())); }
+        //     for (let i = 0; i < data.length; i += 4) { result.push(bcdLEToInt(data.slice(i, i + 4))); }
         //     value = result;
         // }
         else if (di === '04000508' && arrPush.length >= 4) {
@@ -711,11 +709,11 @@ function decode645(_msg) {
         } else if (/^033001(?:0[1-9]|0A)$/.test(di) && arrPush.length >= 10) {
             value = parseMeterResetRecord645(arrPush, di);
         } else if (di === '03300D00' && arrPush.length >= 4) {
-            value = bytesToIntBE(arrPush.slice(4).reverse());
+            value = bcdLEToInt(arrPush.slice(4));
         }
         else if ((isDailyFreezeDI(di) || isSettlementFreezeDI(di) || isTootalDI(di)) && arrPush.length >= 8) {
             // else if ((arrDays.includes(di) || arrDaysFX.includes(di) || arrDaysZX.includes(di) || arrDaysJSR.includes(di)) && arrPush.length >= 8) {
-            // const energyNum = bytesToIntBE(arrPush.slice(4, 8).reverse());
+            // const energyNum = bcdLEToInt(arrPush.slice(4, 8));
             // value = Math.round(energyNum / 100 * 100) / 100;
             // DATA-0x33 后：DI(4) + 5×(4B 小端 BCD) = 24B LEN → 与 698 的日冻结 record 风格一致
             // DATA-0x33 后:  DI(4) + N×(4B 小端BCD)；常见为 5 组（总/尖/峰/平/谷），也有只回 1 组"总"的情况
@@ -775,7 +773,7 @@ function decode645(_msg) {
             const modelBytes = arrPush.slice(4, 14);
             value = Buffer.from(modelBytes.filter(b => b !== 0x00)).toString('ascii');
         } else if (arrPub.includes(di) && arrPush.length >= 8) {
-            const v = bytesToIntBE(arrPush.slice(4, 8).reverse());
+            const v = bcdLEToInt(arrPush.slice(4, 8));
             value = Math.round(v / 100 * 100) / 100;
         } else if (di === '070000FF' && arrPush.length >= 16) {
             // 身份认证（数据标识 070000FF）：随机数2(4B) + ESAM序列号(8B) + 可能的附加字段
@@ -801,7 +799,7 @@ function decode645(_msg) {
         } else if ((di === '02800008' || di === '02800009') && arrPush.length >= 6) {
             // 02800008: 时钟电池电压，02800009: 停电抄表电池电压
             // C# 解析为2字节，保留2位小数 → V
-            const n = bytesToIntBE(arrPush.slice(-2).reverse());
+            const n = bcdLEToInt(arrPush.slice(-2));
             const v = n / 100.0;
             value = {
                 rawValue: n,
@@ -811,7 +809,7 @@ function decode645(_msg) {
             };
         } else if (di === '0280000A' && arrPush.length >= 8) {
             // 0280000A: 内部电池工作时间，4字节，单位分
-            value = bytesToIntBE(arrPush.slice(-4).reverse());
+            value = bcdLEToInt(arrPush.slice(-4));
         } else if (di === '0400040A' && arrPush.length >= 7) {
             // 无功脉冲常数：DI(4) + N3(3字节BCD，小端)
             const dataBytes = arrPush.slice(4, 7); // LE：低字节在前

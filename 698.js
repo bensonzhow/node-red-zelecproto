@@ -14,12 +14,6 @@
 /** ===================== 工具/常量 ===================== */
 
 
-let mlog={
-    debug: function(...args){ console.log("[DEBUG]", ...args); },
-    status: function(...args){ console.log("[STATUS]", ...args); },
-    error: function(...args){ console.error("[ERROR]", ...args); }
-}
-
 // CRC-16/X-25
 function crc16X25(buffer) {
     const CRC_TABLE = Uint16Array.from([
@@ -776,7 +770,11 @@ function parseDailyFreezeRecord(dataBuffer, oad = '50040200') {
 function detectAndValidateFrame(buffer) {
     if (buffer.length < 12 || buffer[0] !== 0x68 || buffer[buffer.length - 1] !== 0x16) return null;
 
+    // L 域的高两位是控制标志，只有低 14 位表示帧长度。校验 HCS/FCS
+    // 时仍使用 buffer 中的原始 L 字节，不能在此修改原始帧。
     const declaredLength = buffer[1] | (buffer[2] << 8);
+    const lengthValue = declaredLength & 0x3FFF;
+    const lengthFlags = declaredLength & 0xC000;
     const expectedLength = buffer.length - 2; // 按标准：长度域为除起始/结束符外的字节总数
     const fcsStart = buffer.length - 3;
 
@@ -806,8 +804,8 @@ function detectAndValidateFrame(buffer) {
             }
 
             // 校验和通过但长度域与帧长不符：视为无效帧直接拒绝。
-            if (declaredLength !== expectedLength) {
-                throw new Error(`帧长度域不匹配: 声明=${declaredLength}, 实际=${expectedLength}`);
+            if (lengthValue !== expectedLength) {
+                throw new Error(`帧长度域不匹配: 声明=${lengthValue}, 实际=${expectedLength}`);
             }
 
             const saBytes = buffer.slice(saFlagIndex + 1, serverAddrEnd);
@@ -821,7 +819,9 @@ function detectAndValidateFrame(buffer) {
                 serverAddress: saBytes.toString('hex').toUpperCase(),
                 clientAddress: caBytes.toString('hex').toUpperCase(),
                 declaredLength,
-                lengthMatched: declaredLength === expectedLength
+                lengthValue,
+                lengthFlags,
+                lengthMatched: lengthValue === expectedLength
             };
         }
         return null;
@@ -842,15 +842,17 @@ function detectAndValidateFrame(buffer) {
             const receivedFcs = buffer.readUInt16LE(fcsStart);
             if (calculatedFcs === receivedFcs) {
                 // 与结构化路径一致：长度域不符即拒绝
-                if (declaredLength !== expectedLength) {
-                    throw new Error(`帧长度域不匹配: 声明=${declaredLength}, 实际=${expectedLength}`);
+                if (lengthValue !== expectedLength) {
+                    throw new Error(`帧长度域不匹配: 声明=${lengthValue}, 实际=${expectedLength}`);
                 }
                 return {
                     apduStart: hcsStart + 2,
                     fcsStart,
                     address: buffer.slice(4, hcsStart).toString('hex').toUpperCase(),
                     declaredLength,
-                    lengthMatched: declaredLength === expectedLength
+                    lengthValue,
+                    lengthFlags,
+                    lengthMatched: lengthValue === expectedLength
                 };
             } else {
                 throw new Error(`FCS校验失败: 计算=0x${calculatedFcs.toString(16)}, 接收=0x${receivedFcs.toString(16)}`);
@@ -1387,44 +1389,39 @@ function parseSecurityResponseStructure(dataBuffer) {
 function parsePlainContent(plainContent) {
     if (plainContent.length < 8) return null; // 最小长度检查
 
-    try {
-        let offset = 0;
+    let offset = 0;
 
-        // APDU类型 (2字节)
-        const apduType = plainContent.readUInt16BE(offset);
-        offset += 2;
+    // APDU类型 (2字节)
+    const apduType = plainContent.readUInt16BE(offset);
+    offset += 2;
 
-        // PIID (1字节)
-        const piid = plainContent[offset];
-        offset += 1;
+    // PIID (1字节)
+    const piid = plainContent[offset];
+    offset += 1;
 
-        // OAD (4字节)
-        const oad = plainContent.slice(offset, offset + 4).toString('hex').toUpperCase();
-        offset += 4;
+    // OAD (4字节)
+    const oad = plainContent.slice(offset, offset + 4).toString('hex').toUpperCase();
+    offset += 4;
 
-        // 数据类型 (1字节)
-        if (offset >= plainContent.length) return null;
-        const dataType = plainContent[offset];
-        offset += 1;
+    // 数据类型 (1字节)
+    if (offset >= plainContent.length) return null;
+    const dataType = plainContent[offset];
+    offset += 1;
 
-        // 数据长度 (1字节)
-        if (offset >= plainContent.length) return null;
-        const dataLength = plainContent[offset];
-        offset += 1;
+    // 数据长度 (1字节)
+    if (offset >= plainContent.length) return null;
+    const dataLength = plainContent[offset];
+    offset += 1;
 
-        // 数据内容
-        if (offset + dataLength > plainContent.length) return null;
-        const dataContent = plainContent.slice(offset, offset + dataLength);
+    // 数据内容
+    if (offset + dataLength > plainContent.length) return null;
+    const dataContent = plainContent.slice(offset, offset + dataLength);
 
-        // 尝试解析状态字
-        if (dataType === 0x01 && dataLength >= 4) { // array类型
-            return parseArrayStatusWord(dataContent);
-        } else if (dataType === 0x04 && dataLength >= 4) { // bit-string类型
-            return dataContent.readUInt32LE(0);
-        }
-
-    } catch (error) {
-        console.error('解析明文内容失败:', error.message);
+    // 尝试解析状态字
+    if (dataType === 0x01 && dataLength >= 4) { // array类型
+        return parseArrayStatusWord(dataContent);
+    } else if (dataType === 0x04 && dataLength >= 4) { // bit-string类型
+        return dataContent.readUInt32LE(0);
     }
 
     return null;
@@ -1469,27 +1466,22 @@ function parseArrayStatusWord(arrayData) {
  * @returns {number|null} 状态字或null
  */
 function parseWithEnhancedParser(dataBuffer) {
-    try {
-        const { result: genericResult } = enhancedParseData(dataBuffer, '2014', '02');
+    const { result: genericResult } = enhancedParseData(dataBuffer, '2014', '02');
 
-        if (genericResult.dataType === 'bit-string') {
-            // 直接bit-string类型
-            if (dataBuffer.length >= 4) {
-                return dataBuffer.readUInt32LE(0);
-            }
-        } else if (genericResult.dataType === '数组') {
-            // 数组类型，查找bit-string元素
-            if (genericResult.parsedValue && Array.isArray(genericResult.parsedValue)) {
-                for (const item of genericResult.parsedValue) {
-                    if (item.dataType === 'bit-string' && item.parsedValue && item.parsedValue.length >= 4) {
-                        return item.parsedValue.readUInt32LE(0);
-                    }
+    if (genericResult.dataType === 'bit-string') {
+        // 直接bit-string类型
+        if (dataBuffer.length >= 4) {
+            return dataBuffer.readUInt32LE(0);
+        }
+    } else if (genericResult.dataType === '数组') {
+        // 数组类型，查找bit-string元素
+        if (genericResult.parsedValue && Array.isArray(genericResult.parsedValue)) {
+            for (const item of genericResult.parsedValue) {
+                if (item.dataType === 'bit-string' && item.parsedValue && item.parsedValue.length >= 4) {
+                    return item.parsedValue.readUInt32LE(0);
                 }
             }
         }
-
-    } catch (error) {
-        console.error('enhancedParseData解析失败:', error.message);
     }
 
     return null;
@@ -3276,8 +3268,6 @@ function batchMsg(_msg, mode) {
                 frameLen: finalFrame.length,
                 time: new Date().toISOString()
             };
-            // if (typeof node !== 'undefined' && node) node.status({ fill: 'green', shape: 'dot', text: `编码成功: ${finalFrame.length}B` });
-            mlog.status({ fill: 'green', shape: 'dot', text: `编码成功: ${finalFrame.length}B` });
             _msg = Object.assign({}, _pdata, _msg);
             return _msg;
 
@@ -3304,6 +3294,12 @@ function batchMsg(_msg, mode) {
                 saFlag: frameInfo.saFlag,
                 declaredLength: frameInfo.declaredLength,
                 lengthMatched: frameInfo.lengthMatched,
+                // 保持无标志帧既有输出形态；存在 L 域控制标志时显式保留原始
+                // 长度与其数值部分，便于下游区分两者。
+                ...(frameInfo.lengthFlags ? {
+                    lengthValue: frameInfo.lengthValue,
+                    lengthFlags: frameInfo.lengthFlags
+                } : {}),
                 totalLength: buffer.length,
                 apduLength: apduBuffer.length
             };
@@ -3319,22 +3315,10 @@ function batchMsg(_msg, mode) {
                 time: new Date().toISOString()
             };
 
-            const statusText = (_msg.payload && _msg.payload.error)
-                ? `解码失败: ${_msg.payload.error.name || _msg.payload.error}`
-                : `解码成功: ${result.unifiedFormat.objectInfo?.desc || result.unifiedFormat.type}`;
-            const statusFill = (_msg.payload && _msg.payload.error) ? "red" : "green";
-
-            // node.status({ fill: statusFill, shape: "dot", text: statusText });
-            mlog.status({ fill: statusFill, shape: "dot", text: statusText });
             return _msg;
         }
 
     } catch (err) {
-        // node.status({ fill: 'red', shape: 'ring', text: `${mode === 'encode' ? '编码' : '解码'}异常` });
-        // node.error(`[DLT698-Codec] ${err.message}`, _msg);
-        mlog.status({ fill: 'red', shape: 'ring', text: `${mode === 'encode' ? '编码' : '解码'}异常` });
-        mlog.error(`[DLT698-Codec] ${err.message}`, _msg);
-        
         _msg.error = err.message;
         _msg._mode = mode;
         _msg.payload = null;

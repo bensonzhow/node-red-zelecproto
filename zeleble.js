@@ -7,9 +7,14 @@ module.exports = function (RED) {
         var node = this;    
 
         this.on("input", function (msg, send, done) {
-            msg = protoBle(msg);
-            send(msg);
-            done();
+            try {
+                msg = protoBle(msg);
+                send(msg);
+                done();
+            } catch (err) {
+                node.error(err, msg);
+                done(err);
+            }
         });
         this.on('close', () => {
 

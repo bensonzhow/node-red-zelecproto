@@ -8,17 +8,20 @@ module.exports = function (RED) {
         var node = this;    
 
         this.on("input", function (msg, send, done) {
-            msg._proto = msg.customProto || msg.proto
-            if(msg._proto == "645"){
-                msg = proto645(msg);
-            }else if(msg._proto == "698"){
-                msg = proto698(msg);
-            }
-            delete msg._proto
-            
-            send(msg);
+            try {
+                var proto = msg.customProto || msg.proto;
+                if(proto == "645"){
+                    msg = proto645(msg);
+                }else if(proto == "698"){
+                    msg = proto698(msg);
+                }
 
-            done();
+                send(msg);
+                done();
+            } catch (err) {
+                node.error(err, msg);
+                done(err);
+            }
         });
         this.on('close', () => {
 

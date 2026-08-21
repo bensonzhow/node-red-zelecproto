@@ -54,9 +54,65 @@ function corrupt645Checksum(frame) {
     return frame.slice(0, -4) + (cs === '00' ? 'FF' : '00') + frame.slice(-2);
 }
 
+function build645Response(di, dataBytes) {
+    var address = Buffer.alloc(6);
+    var diBytes = Buffer.from(di, 'hex').reverse();
+    var plainData = Buffer.concat([diBytes, Buffer.from(dataBytes)]);
+    var encodedData = Buffer.from(Array.from(plainData, function (byte) {
+        return (byte + 0x33) & 0xFF;
+    }));
+    var frameWithoutChecksum = Buffer.concat([
+        Buffer.from([0x68]), address, Buffer.from([0x68, 0x91, encodedData.length]), encodedData
+    ]);
+    var checksum = Array.from(frameWithoutChecksum).reduce(function (sum, byte) {
+        return (sum + byte) & 0xFF;
+    }, 0);
+    return Buffer.concat([frameWithoutChecksum, Buffer.from([checksum, 0x16])]).toString('hex').toUpperCase();
+}
+
 function corrupt698Fcs(frame) {
     // 698 帧尾结构：... HCS(2字节) 16。破坏 HCS 触发 FCS 校验失败
     return frame.slice(0, -4) + '0000' + frame.slice(-2);
+}
+
+function crc16X25(buffer) {
+    var crc = 0xFFFF;
+    for (var i = 0; i < buffer.length; i++) {
+        crc ^= buffer[i];
+        for (var bit = 0; bit < 8; bit++) {
+            crc = (crc & 1) ? ((crc >>> 1) ^ 0x8408) : (crc >>> 1);
+        }
+    }
+    return (crc ^ 0xFFFF) & 0xFFFF;
+}
+
+function with698LengthFlags(frame, flags) {
+    var buffer = Buffer.from(frame, 'hex');
+    var rawLength = buffer.readUInt16LE(1);
+    buffer.writeUInt16LE((rawLength & 0x3FFF) | flags, 1);
+
+    var saLength = (buffer[4] & 0x0F) + 1;
+    var hcsStart = 4 + 1 + saLength + 1; // 当前回归夹具使用 1 字节客户地址。
+    buffer.writeUInt16LE(crc16X25(buffer.slice(1, hcsStart)), hcsStart);
+
+    var fcsStart = buffer.length - 3;
+    buffer.writeUInt16LE(crc16X25(buffer.slice(1, fcsStart)), fcsStart);
+    return buffer.toString('hex').toUpperCase();
+}
+
+function captureConsole(call) {
+    var originalLog = console.log;
+    var originalError = console.error;
+    var logs = [];
+    var errors = [];
+    try {
+        console.log = function () { logs.push(Array.prototype.slice.call(arguments)); };
+        console.error = function () { errors.push(Array.prototype.slice.call(arguments)); };
+        return { result: call(), logs: logs, errors: errors };
+    } finally {
+        console.log = originalLog;
+        console.error = originalError;
+    }
 }
 
 var good645Frame = fixtures645.decodeCases[0].frame;
@@ -121,6 +177,25 @@ runCase('645 负例 / 小写合法帧仍可解码成功', function () {
     assert.strictEqual(result.payload.ok, true, '小写帧应解码成功');
 });
 
+runCase('645 负例 / BCD 非法半字节不得静默截断', function () {
+    var valid = mustNotThrow(proto645, {
+        mode: 'decode',
+        payload: build645Response('02030000', [0x45, 0x23, 0x01])
+    }, '合法 BCD');
+    assert.strictEqual(valid.payload.value, 12345, '合法小端 BCD 应保持既有数值语义');
+
+    [[0x5F, 0x0A, 0x00], [0x40, 0xE2, 0x01]].forEach(function (dataBytes) {
+        var result = mustNotThrow(proto645, {
+            mode: 'decode',
+            payload: build645Response('02030000', dataBytes)
+        }, '非法 BCD');
+        assert.strictEqual(result.payload.ok, false, '非法 BCD 不应解码成功');
+        assert.strictEqual(result.payload.reason, 'decode_exception', '应返回明确的解码异常');
+        assert.ok(/BCD 半字节越界/.test(result.payload.err), '应指出 BCD 半字节非法');
+        assert.ok(result.payload.raw, '失败结果应保留原始帧');
+    });
+});
+
 /* ===================== 698 负例契约 ===================== */
 
 runCase('698 负例 / 空消息原样返回', function () {
@@ -182,6 +257,39 @@ runCase('698 负例 / 长度域与帧长不匹配的帧被拒绝', function () {
     var result = mustNotThrow(proto698, { mode: 'decode', payload: tamperedFrame }, '长度域不匹配帧');
     assert.ok(/长度域不匹配/.test(result.error), '应以长度域错误拒绝，实际: ' + result.error);
     assert.strictEqual(result.payload, null, 'payload 应置为 null');
+});
+
+[0x4000, 0x8000].forEach(function (flag) {
+    runCase('698 负例 / L 域标志 0x' + flag.toString(16) + ' 的合法帧可解码', function () {
+        var flaggedFrame = with698LengthFlags(good698Frame, flag);
+        var result = mustNotThrow(proto698, { mode: 'decode', payload: flaggedFrame }, 'L 域标志帧');
+        assert.strictEqual(result.error, undefined, '带 L 域标志的合法帧不应有 error');
+        assert.strictEqual(result.decoding_details.frameInfo.lengthFlags, flag, '应保留 L 域标志');
+        assert.strictEqual(result.decoding_details.frameInfo.lengthValue, good698Frame.length / 2 - 2, '应使用低 14 位作为长度');
+    });
+});
+
+runCase('698 负例 / 正常与异常调用不写控制台', function () {
+    var encoded = captureConsole(function () {
+        return proto698({ mode: 'encode', payload: { oadHex: '40010200' } });
+    });
+    assert.strictEqual(typeof encoded.result.payload, 'string', '合法编码应生成帧');
+    assert.deepStrictEqual(encoded.logs, [], '编码调用不应输出 console.log');
+    assert.deepStrictEqual(encoded.errors, [], '编码调用不应输出 console.error');
+
+    var normal = captureConsole(function () {
+        return proto698({ mode: 'decode', payload: good698Frame });
+    });
+    assert.strictEqual(normal.result.error, undefined, '合法帧应正常解码');
+    assert.deepStrictEqual(normal.logs, [], '正常调用不应输出 console.log');
+    assert.deepStrictEqual(normal.errors, [], '正常调用不应输出 console.error');
+
+    var invalid = captureConsole(function () {
+        return proto698({ mode: 'decode', payload: '68AA16' });
+    });
+    assert.ok(invalid.result.error, '畸形帧应返回错误');
+    assert.deepStrictEqual(invalid.logs, [], '异常调用不应输出 console.log');
+    assert.deepStrictEqual(invalid.errors, [], '异常调用不应输出 console.error');
 });
 
 runCase('698 负例 / 畸形帧返回帧格式错误', function () {
