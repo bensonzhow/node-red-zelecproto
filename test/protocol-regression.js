@@ -127,6 +127,27 @@ function runFixture(protocolName, protocol, fixtures) {
 runFixture('698', proto698, fixtures698);
 runFixture('645', proto645, fixtures645);
 
+runCase('698 电压 / long-unsigned 与 double-long-unsigned 倍率兼容', function () {
+    [
+        {
+            frame: '682E00C3055620453300001172E7900015850101200002000101031208961208981208980000010004C251DB287BC416',
+            values: [219.8, 220, 220],
+            scale: -1
+        },
+        {
+            frame: '683400C3052622620000601182C490001B85010120000200010103060021920706002195A10600218F2C00000100045769BB2BE0ED16',
+            values: [220.0071, 220.0993, 219.934],
+            scale: -4
+        }
+    ].forEach(function (testCase) {
+        var result = runQuietly(proto698, { mode: 'decode', payload: testCase.frame });
+        assert.strictEqual(result.error, undefined, '电压报文不应返回 error');
+        assert.deepStrictEqual(result.payload.value, testCase.values, '电压值不一致');
+        assert.strictEqual(result.payload.metadata.scale, testCase.scale, 'metadata.scale 不一致');
+        assert.ok(result.payload.data.every(function (item) { return item.scale === testCase.scale; }), '分相 scale 不一致');
+    });
+});
+
 runCase('645/698 事件电能 / formattedValue规则一致', function () {
     [
         [proto645, fixtures645, ['上一次电表清零记录', '上一次负荷开关误动作事件实际报文含动作后状态', '上一次电源异常事件', '上一次开盖明细']],

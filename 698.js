@@ -2225,8 +2225,13 @@ function parseVoltageCurrentData(dataBuffer, oad) {
     try {
         const isVoltage = oad.startsWith("2000");
         const unit = isVoltage ? "V" : "A";
-        const scale = isVoltage ? -1 : -3;
         const { result: genericResult } = enhancedParseData(dataBuffer, oad.slice(0, 4), oad.slice(4, 6));
+        // Some meters encode voltage as double-long-unsigned with four decimals,
+        // while the standard long-unsigned form remains scaled by 10.
+        const voltageItem = genericResult.dataType === '数组'
+            ? genericResult.parsedValue[0]
+            : genericResult;
+        const scale = isVoltage && voltageItem?.dataType === '双长无符号整数' ? -4 : (isVoltage ? -1 : -3);
         const divisor = Math.pow(10, Math.abs(scale));
 
         if (genericResult.dataType === '数组') {
